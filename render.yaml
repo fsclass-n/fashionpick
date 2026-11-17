@@ -5,7 +5,7 @@ services:
     name: fashionpick-api
     runtime: docker
     plan: free
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /health
     autoDeploy: true

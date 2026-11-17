@@ -1,4 +1,6 @@
-export const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
+// VITE_API_BASE_URL 미설정 시: 프로덕션 빌드는 Render API, 개발 서버는 로컬 API
+const DEFAULT_API = import.meta.env.PROD ? 'https://fashionpick-api.onrender.com' : 'http://localhost:8000'
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API).replace(/\/$/, '')
 export const WS_URL = API_BASE.replace(/^http/, 'ws') + '/ws'
 
 const TOKEN_KEY = 'fp_token'

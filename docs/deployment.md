@@ -35,7 +35,7 @@ Docker로 한 번에 실행하려면 `docker compose up --build`를 쓰세요. A
 
 | 서비스 | 타입 | 주소 |
 |---|---|---|
-| `fashionpick-api` | Docker Web Service (`backend/Dockerfile`, context `.`) | https://fashionpick-api.onrender.com |
+| `fashionpick-api` | Docker Web Service (루트 `Dockerfile`, context `.`) | https://fashionpick-api.onrender.com |
 | `fashionpick` | Static Site (`frontend`, `dist`) | https://fashionpick.onrender.com |
 
 - 두 서비스 모두 `autoDeploy: true`로 설정되어 있어, `main`에 푸시하면 Render가 Git 연동으로 자동 배포합니다. Deploy Hook은 쓰지 않습니다.

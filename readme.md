@@ -43,7 +43,6 @@ fashionpick/
 │   │   ├── routers/         # auth · trends · catalog · orders · admin · realtime(ws)
 │   │   └── services/        # trends · catalog · ordering · rpa_jobs · realtime · seed
 │   ├── tests/               # pytest
-│   └── Dockerfile           # Playwright Chromium 포함 (Render)
 ├── frontend/                # React + Vite + Tailwind v4
 │   └── src/{pages,components,context,lib}
 ├── rpa/
@@ -54,6 +53,7 @@ fashionpick/
 ├── .github/workflows/       # ci · deploy · pages
 ├── .env.example             # 환경 변수 (Render 필수 항목 표시)
 ├── requirements.txt
+├── Dockerfile             # 백엔드 이미지 (Playwright Chromium 포함, Render)
 ├── docker-compose.yml · render.yaml · netlify.toml
 ```
 

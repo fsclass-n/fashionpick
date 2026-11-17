@@ -1,5 +1,6 @@
 # fashionpick API (FastAPI + Playwright Chromium) - Render Docker Web Service
-# build context: 저장소 루트  (docker build -f backend/Dockerfile .)
+# build context: 저장소 루트  (docker build -t fashionpick-api .)
+# Render 기본값(Dockerfile Path ./Dockerfile, Docker Context .)과 일치하도록 루트에 둔다.
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

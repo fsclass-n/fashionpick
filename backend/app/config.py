@@ -9,6 +9,8 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 STORAGE_DIR = ROOT_DIR / "backend" / "storage"
 load_dotenv(ROOT_DIR / ".env")
 
+DEFAULT_CORS = "http://localhost:5173,https://fashionpick.netlify.app,https://fashionpick.onrender.com"
+
 
 def _bool(name: str, default: bool) -> bool:
     return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
@@ -31,7 +33,7 @@ class Settings:
         self.database_url = os.getenv("DATABASE_URL") or f"sqlite:///{(STORAGE_DIR / 'fashionpick.db').as_posix()}"
         self.db_ssl = _bool("DB_SSL", True)
 
-        self.cors_origins = [o.strip().rstrip("/") for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
+        self.cors_origins = [o.strip().rstrip("/") for o in (os.getenv("CORS_ORIGINS") or DEFAULT_CORS).split(",") if o.strip()]
         self.frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
         self.backend_public_url = os.getenv("BACKEND_PUBLIC_URL", "http://localhost:8000").rstrip("/")
 
