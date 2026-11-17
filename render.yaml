@@ -1,0 +1,82 @@
+# Render Blueprint - 프런트엔드/백엔드 독립 서비스
+services:
+  # Backend API - https://fashionpick-api.onrender.com
+  - type: web
+    name: fashionpick-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: CORS_ORIGINS
+        value: https://fashionpick.netlify.app,https://fashionpick.onrender.com
+      - key: FRONTEND_URL
+        value: https://fashionpick.onrender.com
+      - key: BACKEND_PUBLIC_URL
+        value: https://fashionpick-api.onrender.com
+      - key: RPA_MODE
+        value: demo
+      - key: SCHEDULER_ENABLED
+        value: "true"
+      - key: ENABLE_TEST_LOGIN
+        value: "true"
+      - key: TEST_USER_PASSWORD
+        sync: false
+      - key: TEST_ADMIN_PASSWORD
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: NAVER_CLIENT_ID
+        sync: false
+      - key: NAVER_CLIENT_SECRET
+        sync: false
+      - key: KAKAO_CLIENT_ID
+        sync: false
+      - key: KAKAO_CLIENT_SECRET
+        sync: false
+      - key: NAVER_DATALAB_CLIENT_ID
+        sync: false
+      - key: NAVER_DATALAB_CLIENT_SECRET
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: ORDER_WEBHOOK_SECRET
+        generateValue: true
+
+  # Frontend Production - https://fashionpick.onrender.com
+  - type: web
+    name: fashionpick
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://fashionpick-api.onrender.com
+      - key: NODE_VERSION
+        value: "22"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable

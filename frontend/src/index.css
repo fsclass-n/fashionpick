@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Playfair Display", "Noto Serif KR", Georgia, serif;
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --color-accent: #b4532a;
+  --color-accent-soft: #e9c9b4;
+  --color-success: #2f7d5b;
+  --color-danger: #b4302a;
+  --color-warn: #b98a1e;
+}
+
+:root {
+  --bg: #f6f4ef;
+  --surface: #ffffff;
+  --surface-2: #efece5;
+  --fg: #111111;
+  --muted: #6b6862;
+  --line: #e1ddd4;
+}
+
+.dark {
+  --bg: #0d0d0d;
+  --surface: #161616;
+  --surface-2: #1f1f1f;
+  --fg: #f2efe8;
+  --muted: #9b978e;
+  --line: #2b2b2b;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+}
+
+@layer base {
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-bg text-fg font-sans antialiased; word-break: keep-all; }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  ::selection { background: var(--color-accent); color: #fff; }
+}
+
+@utility card { @apply rounded-2xl border border-line bg-surface; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50; }
+@utility btn-primary { @apply btn bg-fg text-bg hover:opacity-85; }
+@utility btn-accent { @apply btn bg-accent text-white hover:brightness-110; }
+@utility btn-ghost { @apply btn border border-line hover:bg-surface-2; }
+@utility input { @apply w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm outline-none transition placeholder:text-muted focus:border-fg; }
+@utility label { @apply mb-1.5 block text-xs font-semibold tracking-[0.14em] text-muted uppercase; }
+@utility eyebrow { @apply text-[11px] font-semibold tracking-[0.28em] text-muted uppercase; }
+@utility chip { @apply inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-0.5 text-xs; }
+@utility table-wrap {
+  @apply overflow-x-auto rounded-2xl border border-line bg-surface;
+  & table { @apply w-full text-sm; }
+  & th { @apply border-b border-line px-4 py-3 text-left text-xs font-semibold tracking-wider whitespace-nowrap text-muted uppercase; }
+  & td { @apply border-b border-line px-4 py-3 whitespace-nowrap; }
+  & tr:last-child td { @apply border-b-0; }
+}
+
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes float-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.animate-toast-in { animation: toast-in .35s cubic-bezier(.2,.8,.2,1); }
+.animate-fade-in { animation: fade-in .3s ease; }
+.animate-marquee { animation: marquee 30s linear infinite; }
+.animate-float-slow { animation: float-slow 7s ease-in-out infinite; }

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fashionpick · RPA 기반 패션 트렌드 · 소싱 · 발주 자동화 플랫폼</title>
+  <meta name="description" content="RPA로 트렌드 키워드를 수집하고, 도매 상품을 소싱하고, 주문 발생 시 발주서를 자동 작성하는 패션 쇼핑몰 운영 자동화 플랫폼" />
+  <style>
+    :root { --bg:#f6f4ef; --fg:#111; --muted:#6b6862; --line:#e1ddd4; --accent:#b4532a; --surface:#fff; }
+    * { box-sizing: border-box; margin: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; line-height: 1.6; word-break: keep-all; }
+    .serif { font-family: "Playfair Display", Georgia, "Times New Roman", serif; }
+    a { color: inherit; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 28px 0; }
+    .logo { font-size: 26px; font-style: italic; text-decoration: none; }
+    .logo i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: 4px; }
+    .eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .hero { padding: 80px 0 96px; border-bottom: 1px solid var(--line); }
+    .hero h1 { font-size: clamp(48px, 9vw, 112px); line-height: .95; font-weight: 400; margin-top: 18px; }
+    .hero h1 em { color: var(--accent); }
+    .hero p { max-width: 620px; color: var(--muted); margin-top: 28px; font-size: 17px; }
+    .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; font-size: 14px; background: var(--surface); }
+    .btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+    section { padding: 88px 0; border-bottom: 1px solid var(--line); }
+    h2 { font-size: clamp(32px, 5vw, 56px); font-weight: 400; margin: 12px 0 40px; line-height: 1.05; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 28px; }
+    .card .num { font-size: 44px; font-style: italic; color: var(--accent); }
+    .card h3 { font-size: 20px; margin: 8px 0; }
+    .card p, .card li { color: var(--muted); font-size: 14px; }
+    .card ul { padding-left: 18px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); border-radius: 16px; overflow: hidden; }
+    th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 12px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; width: 220px; }
+    tr:last-child td, tr:last-child th { border-bottom: 0; }
+    .flow { display: grid; gap: 0; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+    .flow div { padding: 24px; background: var(--surface); border-right: 1px solid var(--line); }
+    .flow div:last-child { border-right: 0; }
+    .flow b { display: block; font-size: 22px; font-style: italic; }
+    .flow span { font-size: 13px; color: var(--muted); }
+    .team { display: flex; flex-wrap: wrap; gap: 10px; }
+    .team span { padding: 10px 18px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+    footer { padding: 48px 0; color: var(--muted); font-size: 13px; text-align: center; }
+    .dark { background: #0e0d0c; color: #f4efe6; }
+    .dark .card { background: #171717; border-color: #2b2b2b; }
+    .dark .card p, .dark .card li { color: #9b978e; }
+    .dark h2 em { color: #e07a4f; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="logo serif" href="./">fashionpick<i></i></a>
+      <a class="btn" href="https://github.com/fsclass-n/fashionpick">GitHub</a>
+    </header>
+
+    <div class="hero">
+      <p class="eyebrow">4인 팀 프로젝트 · RPA Commerce Automation</p>
+      <h1 class="serif">From <em>trend</em><br/>to order.</h1>
+      <p>fashionpick은 패션 쇼핑몰 운영을 자동화하는 커머스 플랫폼입니다. RPA(Playwright · BeautifulSoup)가 트렌드 키워드를 수집하고, 그 키워드로 도매 사이트에서 상품 이미지와 정보를 가져오며, 주문이 들어오면 공급처별 발주서(Excel/PDF)를 자동으로 작성해 발송하고 실시간으로 알립니다.</p>
+      <div class="btns">
+        <a class="btn primary" href="https://fashionpick.onrender.com">Production (Render)</a>
+        <a class="btn" href="https://fashionpick.netlify.app">Staging (Netlify)</a>
+        <a class="btn" href="https://fashionpick-api.onrender.com/docs">API Docs</a>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <p class="eyebrow">Service</p>
+      <h2 class="serif">Three automations</h2>
+      <div class="grid">
+        <div class="card"><div class="num serif">01</div><h3>트렌드 수집</h3><p>네이버 데이터랩 쇼핑인사이트 API, 패션 플랫폼 랭킹, SNS 해시태그에서 키워드를 모아 순위 변동·검색량 추이·급상승 여부를 분석합니다.</p></div>
+        <div class="card"><div class="num serif">02</div><h3>상품 소싱</h3><p>상위 트렌드 키워드로 도매 사이트를 검색해 상품 이미지·가격·옵션·재고를 수집하고, 판매가·마진율 계산과 트렌드 기반 상품명 추천으로 원클릭 등록합니다.</p></div>
+        <div class="card"><div class="num serif">03</div><h3>발주 자동화</h3><p>주문 발생 시 공급처별로 분류해 발주서(Excel/PDF)를 생성하고 이메일·웹훅으로 발송합니다. 대기 → 발송 완료 → 입고 확인 상태를 추적하고 WebSocket으로 알립니다.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dark">
+    <div class="wrap">
+      <p class="eyebrow">Pipeline</p>
+      <h2 class="serif">How it <em>flows</em></h2>
+      <div class="flow">
+        <div><b class="serif">Collect</b><span>RPA 스케줄러가 트렌드 키워드 수집</span></div>
+        <div><b class="serif">Analyze</b><span>pandas로 순위 변동·급상승 탐지</span></div>
+        <div><b class="serif">Source</b><span>Playwright로 도매 상품·이미지 수집</span></div>
+        <div><b class="serif">Order</b><span>주문 → 공급처별 발주서 자동 생성</span></div>
+        <div><b class="serif">Notify</b><span>WebSocket·텔레그램·디스코드 알림</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <p class="eyebrow">Tech Stack</p>
+      <h2 class="serif">Built with</h2>
+      <table>
+        <tr><th>Frontend</th><td>React (Vite), Tailwind CSS v4, React Router, FontAwesome, Plotly.js, Playfair Display + Pretendard</td></tr>
+        <tr><th>Backend &amp; API</th><td>Python 3.11, FastAPI, WebSockets, SQLAlchemy 2, PyJWT, python-dotenv</td></tr>
+        <tr><th>Database</th><td>TiDB Cloud (MySQL 호환, TLS) · 로컬 개발 시 SQLite</td></tr>
+        <tr><th>RPA &amp; Data</th><td>Playwright (Chromium), BeautifulSoup4, Requests, NumPy, pandas, Plotly</td></tr>
+        <tr><th>Document</th><td>openpyxl (Excel 발주서), ReportLab (PDF 발주서), Jinja2</td></tr>
+        <tr><th>Cloud &amp; CI/CD</th><td>Render (Docker Web Service + Static Site), Netlify, Docker Compose, GitHub Actions, GitHub Pages</td></tr>
+        <tr><th>External</th><td>네이버 데이터랩 쇼핑인사이트, Google · Naver · Kakao OAuth, SMTP, Telegram · Discord Webhook</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <p class="eyebrow">Features</p>
+      <h2 class="serif">Interview-ready UX</h2>
+      <div class="grid">
+        <div class="card"><h3>반응형 Split 로그인</h3><ul><li>룩북 무드 그래픽 + 실시간 트렌드 TOP 10</li><li>운영자/관리자 테스트 간편 로그인</li><li>Google · 네이버 · 카카오 OAuth</li><li>상용 수준 비밀번호 규칙 실시간 검사</li></ul></div>
+        <div class="card"><h3>모바일 GNB</h3><ul><li>햄버거 ↔ X 모션</li><li>우측→좌측 슬라이딩 드로어</li><li>키워드 검색 · 카테고리 · 알림 설정</li></ul></div>
+        <div class="card"><h3>에디토리얼 디자인</h3><ul><li>모노톤 + 시즌 포인트 컬러</li><li>라이트/다크 모드</li><li>세리프 타이틀 / 본문 서체 이원화</li><li>부드러운 To the Top 버튼</li></ul></div>
+        <div class="card"><h3>관리자 컨트롤 룸</h3><ul><li>RPA 작업 주기·실행·로그·성공률</li><li>공급처 · 발주 템플릿 관리</li><li>일반 ⇄ 관리자 실시간 권한 변경</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <p class="eyebrow">Team</p>
+      <h2 class="serif">The people</h2>
+      <div class="team"><span>박미금 (조장)</span><span>김모란</span><span>이오리</span><span>홍기흥</span></div>
+      <div class="btns">
+        <a class="btn" href="architecture.md">설계서 (architecture.md)</a>
+        <a class="btn" href="deployment.md">배포 가이드 (deployment.md)</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>© fashionpick · fsclass-n</footer>
+</body>
+</html>
