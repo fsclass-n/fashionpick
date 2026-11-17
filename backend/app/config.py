@@ -37,6 +37,12 @@ class Settings:
         self.frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
         self.backend_public_url = os.getenv("BACKEND_PUBLIC_URL", "http://localhost:8000").rstrip("/")
 
+        # 실제 관리자: .env 의 ADMIN_TOKEN 으로만 진입 (전체 CRUD)
+        self.admin_token = os.getenv("ADMIN_TOKEN", "")
+        self.admin_email = os.getenv("ADMIN_EMAIL", "owner@fashionpick.dev")
+        self.admin_name = os.getenv("ADMIN_NAME", "플랫폼 관리자")
+
+        # 테스트 계정: 일반 회원 / 테스트 관리자(읽기 전용)
         self.enable_test_login = _bool("ENABLE_TEST_LOGIN", True)
         self.test_user_email = os.getenv("TEST_USER_EMAIL", "user@fashionpick.dev")
         self.test_admin_email = os.getenv("TEST_ADMIN_EMAIL", "admin@fashionpick.dev")

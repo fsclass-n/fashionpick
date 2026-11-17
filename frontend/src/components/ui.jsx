@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleNotch, faXmark, faBoxOpen } from '@fortawesome/free-solid-svg-icons'
+import { faCircleNotch, faXmark, faBoxOpen, faLock } from '@fortawesome/free-solid-svg-icons'
+import { useAuth } from '../context/AuthContext'
+import { READ_ONLY_TIP } from '../lib/site'
 
 const TONES = {
   muted: 'border-line text-muted',
@@ -44,7 +46,7 @@ export function PageHeader({ eyebrow, title, desc, actions }) {
     <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div>
         {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
-        <h1 className="text-3xl leading-tight md:text-5xl">{title}</h1>
+        <h1 className="font-display text-3xl leading-tight md:text-5xl">{title}</h1>
         {desc && <p className="mt-3 max-w-2xl text-sm text-muted md:text-base">{desc}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -119,18 +121,29 @@ export function Modal({ open, onClose, title, children, wide }) {
   )
 }
 
-export function Toggle({ checked, onChange, label, desc }) {
+export function Toggle({ checked, onChange, label, desc, disabled }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-4 py-3">
+    <label className={`flex items-center justify-between gap-4 py-3 ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
       <span>
         <span className="block text-sm font-medium">{label}</span>
         {desc && <span className="block text-xs text-muted">{desc}</span>}
       </span>
       <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${checked ? 'bg-accent' : 'bg-line'}`}>
-        <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+        <input type="checkbox" className="peer sr-only" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
         <span className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition ${checked ? 'translate-x-5' : ''}`} />
       </span>
     </label>
+  )
+}
+
+/** 데이터 변경 버튼: 테스트 관리자(읽기 전용)는 잠금 아이콘과 함께 비활성화 */
+export function WriteButton({ children, disabled, title, ...props }) {
+  const { readOnly } = useAuth()
+  return (
+    <button {...props} disabled={disabled || readOnly} title={readOnly ? READ_ONLY_TIP : title} aria-disabled={disabled || readOnly}>
+      {readOnly && <FontAwesomeIcon icon={faLock} className="text-[0.85em]" />}
+      {children}
+    </button>
   )
 }
 

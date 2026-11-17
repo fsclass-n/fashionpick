@@ -24,7 +24,7 @@ export default function OAuthCallback() {
 
   if (!error) return <Spinner label="소셜 로그인 처리 중" />
   return (
-    <div className="grid min-h-dvh place-items-center p-6 text-center">
+    <div className="container-x grid place-items-center py-24 text-center">
       <div>
         <p className="font-display text-3xl">Login failed</p>
         <p className="mt-3 text-sm text-muted">{error}</p>

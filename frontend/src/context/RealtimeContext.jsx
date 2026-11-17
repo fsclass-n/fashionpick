@@ -21,18 +21,22 @@ function loadPrefs() {
 function describe(event, d) {
   switch (event) {
     case 'order.created':
-      return { pref: 'order', tone: 'accent', icon: 'bag', title: '신규 주문 접수', body: `${d.order_no} · ${d.customer_name} · ${won(d.total_amount)}`, link: '/orders', popup: true }
+      return { pref: 'order', tone: 'accent', icon: 'bag', title: '신규 주문 접수', body: `${d.order_no} · ${d.customer_name} · ${won(d.total_amount)}`, link: '/admin/orders', popup: true }
+    case 'order.placed':
+      return { pref: 'order', tone: 'success', icon: 'bag', title: '주문이 접수되었습니다', body: `${d.order_no} · ${won(d.total_amount)}`, link: '/mypage' }
+    case 'order.status':
+      return { pref: 'order', tone: 'info', icon: 'send', title: '주문 상태가 변경되었습니다', body: `${d.order_no} → ${{ ordering: '발주 진행', ordered: '발주 완료', stocked: '입고 완료' }[d.status] || d.status}`, link: '/mypage' }
     case 'po.created':
-      return { pref: 'po', tone: 'info', icon: 'file', title: '발주서 자동 생성', body: `${d.supplier_name} · ${d.po_no} · ${won(d.total_amount)}`, link: '/orders?tab=po' }
+      return { pref: 'po', tone: 'info', icon: 'file', title: '발주서 자동 생성', body: `${d.supplier_name} · ${d.po_no} · ${won(d.total_amount)}`, link: '/admin/orders?tab=po' }
     case 'po.updated':
-      return { pref: 'po', tone: 'success', icon: 'send', title: '발주 상태 변경', body: `${d.supplier_name} · ${d.po_no} → ${{ pending: '대기', sent: '발송 완료', received: '입고 확인' }[d.status]}`, link: '/orders?tab=po' }
+      return { pref: 'po', tone: 'success', icon: 'send', title: '발주 상태 변경', body: `${d.supplier_name} · ${d.po_no} → ${{ pending: '대기', sent: '발송 완료', received: '입고 확인' }[d.status]}`, link: '/admin/orders?tab=po' }
     case 'po.failed':
-      return { pref: 'po', tone: 'danger', icon: 'warn', title: '발주서 발송 실패', body: `${d.po_no} · ${d.error}`, link: '/orders?tab=po' }
+      return { pref: 'po', tone: 'danger', icon: 'warn', title: '발주서 발송 실패', body: `${d.po_no} · ${d.error}`, link: '/admin/orders?tab=po' }
     case 'trend.surge':
       return { pref: 'trend', tone: 'accent', icon: 'fire', title: '급상승 트렌드 키워드', body: `#${d.keyword} (${d.category}) · ${d.rank}위 · +${Math.round(d.growth * 100)}%`, link: '/trends' }
     case 'rpa.job':
       if (d.status === 'running') return null
-      return { pref: 'rpa', tone: d.status === 'success' ? 'success' : 'danger', icon: 'robot', title: `RPA ${d.status === 'success' ? '완료' : '실패'} · ${d.label}`, body: d.message, link: '/admin' }
+      return { pref: 'rpa', tone: d.status === 'success' ? 'success' : 'danger', icon: 'robot', title: `RPA ${d.status === 'success' ? '완료' : '실패'} · ${d.label}`, body: d.message, link: '/admin/rpa' }
     case 'user.role':
       return { pref: null, tone: 'info', icon: 'user', title: '권한이 변경되었습니다', body: d.role === 'admin' ? '관리자 권한이 부여되었습니다.' : '일반 사용자로 변경되었습니다.' }
     default:
@@ -57,7 +61,9 @@ function beep() {
 }
 
 export function RealtimeProvider({ children }) {
-  const { token, refresh } = useAuth()
+  const { token, refresh, isAdmin } = useAuth()
+  const isAdminRef = useRef(isAdmin)
+  isAdminRef.current = isAdmin
   const [status, setStatus] = useState('offline')
   const [toasts, setToasts] = useState([])
   const [popup, setPopup] = useState(null)
@@ -118,7 +124,7 @@ export function RealtimeProvider({ children }) {
         const p = prefsRef.current
         if (info.pref && !p[info.pref]) return
         toast(info)
-        if (info.popup && p.popup) setPopup({ ...info, data: msg.data })
+        if (info.popup && p.popup && isAdminRef.current) setPopup({ ...info, data: msg.data })
         if (p.sound) beep()
         if (p.browser && 'Notification' in window && Notification.permission === 'granted' && document.hidden) {
           new Notification(info.title, { body: info.body, icon: '/favicon.svg' })

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db, utcnow
 from ..models import Order, Product, PurchaseOrder, User
 from ..schemas import OrderOut
-from ..security import get_current_user
+from ..security import require_admin_read
 from ..services import ordering, trends
 
 router = APIRouter(prefix="/api", tags=["trends"])
@@ -22,14 +22,12 @@ def public_top(limit: int = Query(10, le=20), db: Session = Depends(get_db)):
 
 
 @router.get("/trends/latest")
-def latest(category: str | None = None, limit: int | None = Query(None, le=200), db: Session = Depends(get_db),
-           _: User = Depends(get_current_user)):
+def latest(category: str | None = None, limit: int | None = Query(None, le=200), db: Session = Depends(get_db)):
     return _ser(trends.latest(db, category=category, limit=limit))
 
 
 @router.get("/trends/history")
-def history(keywords: str | None = None, batches: int = Query(24, le=168), db: Session = Depends(get_db),
-            _: User = Depends(get_current_user)):
+def history(keywords: str | None = None, batches: int = Query(24, le=168), db: Session = Depends(get_db)):
     kws = [k.strip() for k in keywords.split(",") if k.strip()] if keywords else [k["keyword"] for k in trends.top_keywords(db, 5)]
     data = trends.history(db, kws, batches)
     for s in data["series"]:
@@ -39,12 +37,12 @@ def history(keywords: str | None = None, batches: int = Query(24, le=168), db: S
 
 
 @router.get("/trends/categories")
-def categories(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def categories(db: Session = Depends(get_db)):
     return trends.category_summary(db)
 
 
 @router.get("/dashboard/summary")
-def dashboard(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def dashboard(db: Session = Depends(get_db), _: User = Depends(require_admin_read)):
     today = utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     latest_items = trends.latest(db)
     recent = db.scalars(select(Order).order_by(Order.created_at.desc()).limit(5)).all()

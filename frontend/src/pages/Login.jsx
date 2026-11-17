@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faArrowTrendUp, faArrowTrendDown, faCheck, faCircleNotch, faComment, faEye, faEyeSlash, faMinus,
-  faMoon, faStore, faSun, faUserShield,
+  faArrowRight, faArrowTrendUp, faArrowTrendDown, faCheck, faCircleNotch, faComment, faEye, faEyeSlash, faKey, faMinus,
+  faStore, faUserShield,
 } from '@fortawesome/free-solid-svg-icons'
 import { faGoogle } from '@fortawesome/free-brands-svg-icons'
 import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../context/ThemeContext'
 import { api, oauthUrl } from '../lib/api'
 import { ErrorBox } from '../components/ui'
 
@@ -52,7 +51,7 @@ function MoodPanel({ top }) {
   const season = new Date().getMonth() >= 2 && new Date().getMonth() <= 7 ? 'SS' : 'FW'
   const year = String(new Date().getFullYear()).slice(2)
   return (
-    <section className="relative overflow-hidden bg-[#0e0d0c] text-[#f4efe6] md:sticky md:top-0 md:h-dvh">
+    <section className="relative overflow-hidden bg-[#0e0d0c] text-[#f4efe6]">
       <div className="pointer-events-none absolute inset-0">
         <div className="animate-float-slow absolute -top-24 -left-20 size-[28rem] rounded-full bg-[radial-gradient(circle,#b4532a_0%,transparent_65%)] opacity-50 blur-2xl" />
         <div className="absolute right-[-10%] bottom-[-15%] size-[32rem] rounded-full bg-[radial-gradient(circle,#6d2233_0%,transparent_60%)] opacity-50 blur-2xl" />
@@ -60,7 +59,7 @@ function MoodPanel({ top }) {
         <div className="absolute top-[22%] right-[16%] hidden h-[46%] w-[34%] -rotate-2 bg-gradient-to-b from-[#c9a27e]/25 to-transparent md:block" />
       </div>
 
-      <div className="relative flex h-full flex-col px-6 pt-8 pb-6 md:px-12 md:py-12">
+      <div className="relative flex h-full flex-col px-6 pt-8 pb-6 md:px-10 md:py-10">
         <div className="flex items-center justify-between">
           <span className="font-display text-2xl italic">fashionpick</span>
           <span className="text-[11px] tracking-[0.3em] text-white/50">LOOKBOOK {season} {year}</span>
@@ -68,11 +67,11 @@ function MoodPanel({ top }) {
 
         <div className="mt-6 md:mt-auto">
           <p className="text-[11px] tracking-[0.35em] text-white/50">TREND · SOURCING · ORDER</p>
-          <h1 className="mt-3 font-display text-5xl leading-[0.95] md:text-7xl lg:text-8xl">
+          <p className="mt-3 font-display text-5xl leading-[0.95] md:text-6xl lg:text-7xl">
             <span className="italic">{season}</span>&nbsp;{year}
             <br />
             <span className="text-white/40">Edition</span>
-          </h1>
+          </p>
           <p className="mt-4 hidden max-w-sm text-sm text-white/60 md:block">
             RPA가 매시간 트렌드 키워드를 읽고, 도매 상품을 찾고, 주문이 들어오면 발주서까지 씁니다.
           </p>
@@ -128,10 +127,10 @@ function SocialButtons({ providers }) {
 
 export default function Login() {
   const { user, login, register, testLogin } = useAuth()
-  const { dark, toggle } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
-  const [mode, setMode] = useState('login')
+  const [params] = useSearchParams()
+  const [mode, setMode] = useState(params.get('mode') === 'register' ? 'register' : 'login')
   const [form, setForm] = useState({ email: '', password: '', name: '' })
   const [showPw, setShowPw] = useState(false)
   const [busy, setBusy] = useState('')
@@ -198,28 +197,26 @@ export default function Login() {
   }
 
   return (
-    <div className="grid min-h-dvh md:grid-cols-[1.1fr_1fr]">
+    <div className="container-x py-8 md:py-14">
+    <div className="grid overflow-hidden border border-line md:grid-cols-[1.1fr_1fr]">
       <MoodPanel top={top} />
 
-      <section className="relative flex items-start justify-center px-6 py-10 md:items-center md:px-12">
-        <button onClick={toggle} className="absolute top-5 right-5 grid size-10 place-items-center rounded-full hover:bg-surface-2" aria-label="테마 전환">
-          <FontAwesomeIcon icon={dark ? faSun : faMoon} />
-        </button>
+      <section className="relative flex items-start justify-center bg-surface px-6 py-10 md:items-center md:px-12 md:py-14">
 
         <div className="w-full max-w-md">
           <p className="eyebrow">Welcome back</p>
-          <h2 className="mt-2 text-4xl md:text-5xl">{mode === 'login' ? 'Sign in' : 'Create account'}</h2>
+          <h1 className="mt-2 font-display text-4xl md:text-5xl">{mode === 'login' ? 'Sign in' : 'Create account'}</h1>
           <p className="mt-2 text-sm text-muted">트렌드부터 발주까지, 쇼핑몰 운영을 자동화하세요.</p>
 
           {providers?.test_login !== false && (
             <div className="mt-8 grid gap-2 sm:grid-cols-2">
               <button type="button" onClick={() => quick('user')} disabled={!!busy} className="btn-ghost justify-start rounded-xl px-4 py-3 text-left">
                 <FontAwesomeIcon icon={busy === 'user' ? faCircleNotch : faStore} spin={busy === 'user'} />
-                <span className="leading-tight"><span className="block">일반 회원 테스트 로그인</span><span className="text-[11px] text-muted">쇼핑몰 운영자</span></span>
+                <span className="leading-tight"><span className="block">일반 회원 테스트 로그인</span><span className="text-[11px] text-muted">쇼핑 · 주문 · 마이페이지</span></span>
               </button>
               <button type="button" onClick={() => quick('admin')} disabled={!!busy} className="btn-primary justify-start rounded-xl px-4 py-3 text-left">
                 <FontAwesomeIcon icon={busy === 'admin' ? faCircleNotch : faUserShield} spin={busy === 'admin'} />
-                <span className="leading-tight"><span className="block">시스템 관리자 테스트 로그인</span><span className="text-[11px] opacity-60">관리자 권한 자동 부여</span></span>
+                <span className="leading-tight"><span className="block">테스트 관리자 로그인</span><span className="text-[11px] opacity-60">관리자 화면 · 읽기 전용</span></span>
               </button>
             </div>
           )}
@@ -269,6 +266,11 @@ export default function Login() {
             <SocialButtons providers={providers} />
           </div>
 
+          <Link to="/admin/login" state={location.state} className="mt-6 flex items-center justify-between rounded-xl border border-dashed border-line px-4 py-3 text-[13px] text-muted hover:border-fg hover:text-fg">
+            <span><FontAwesomeIcon icon={faKey} className="mr-2" />실제 관리자 로그인 (ADMIN_TOKEN)</span>
+            <FontAwesomeIcon icon={faArrowRight} />
+          </Link>
+
           <p className="mt-8 text-center text-sm text-muted">
             {mode === 'login' ? '아직 회원이 아니신가요?' : '이미 계정이 있으신가요?'}{' '}
             <button className="font-semibold text-fg underline underline-offset-4" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(null) }}>
@@ -277,6 +279,7 @@ export default function Login() {
           </p>
         </div>
       </section>
+    </div>
     </div>
   )
 }

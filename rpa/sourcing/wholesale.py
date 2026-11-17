@@ -45,7 +45,7 @@ def demo_products(keywords: list[dict], per_keyword: int = 3) -> list[dict]:
                 "category": category,
                 "keyword": keyword,
                 "wholesale_price": rnd.randrange(low, high, 500),
-                "image_url": f"/media/placeholder/{seed[:12]}.svg?label={quote(keyword)}&color={quote(colors[0])}",
+                "image_url": f"/media/placeholder/{seed[:12]}.svg?label={quote(keyword)}&color={quote(colors[0])}&cat={quote(category)}",
                 "image_ratio": rnd.choice([1.0, 1.25, 1.33, 1.5]),
                 "source_url": f"demo://wholesale/{seed[:12]}",
                 "options": {"colors": colors, "sizes": SIZES.get(category, ["S", "M", "L", "XL"])},

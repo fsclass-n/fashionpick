@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useRealtime } from '../context/RealtimeContext'
 import { useTheme } from '../context/ThemeContext'
-import { PageHeader, Toggle } from '../components/ui'
+import { useAuth } from '../context/AuthContext'
+import { Toggle } from './ui'
 
-export default function Settings() {
+export default function NotificationSettings() {
   const { prefs, updatePrefs, status } = useRealtime()
+  const { isAdmin } = useAuth()
   const { dark, toggle } = useTheme()
   const [perm, setPerm] = useState(() => ('Notification' in window ? Notification.permission : 'unsupported'))
 
@@ -19,15 +21,14 @@ export default function Settings() {
 
   return (
     <>
-      <PageHeader eyebrow="Settings" title={<>Notification <span className="italic">settings</span></>}
-        desc="WebSocket 실시간 알림 수신 항목을 설정합니다. 설정은 이 브라우저에 저장됩니다." />
+      <p className="mb-5 text-[13px] text-muted">WebSocket 실시간 알림 수신 항목을 설정합니다. 설정은 이 브라우저에 저장됩니다.</p>
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card divide-y divide-line px-6 py-2">
-          <Toggle checked={prefs.order} onChange={(v) => updatePrefs({ order: v })} label="신규 주문 알림" desc="쇼핑몰 주문 접수 시 토스트 알림" />
-          <Toggle checked={prefs.popup} onChange={(v) => updatePrefs({ popup: v })} label="신규 주문 팝업" desc="주문 발생 시 화면 중앙 팝업 표시" />
-          <Toggle checked={prefs.po} onChange={(v) => updatePrefs({ po: v })} label="발주서 생성·발송 알림" desc="발주서 자동 생성, 발송, 상태 변경, 실패" />
+          <Toggle checked={prefs.order} onChange={(v) => updatePrefs({ order: v })} label="주문 알림" desc={isAdmin ? '신규 주문 접수 시 토스트 알림' : '내 주문 접수·발주·입고 상태 변경 알림'} />
+          {isAdmin && <Toggle checked={prefs.popup} onChange={(v) => updatePrefs({ popup: v })} label="신규 주문 팝업 (관리자)" desc="주문 발생 시 화면 중앙 팝업 표시" />}
+          {isAdmin && <Toggle checked={prefs.po} onChange={(v) => updatePrefs({ po: v })} label="발주서 생성·발송 알림 (관리자)" desc="발주서 자동 생성, 발송, 상태 변경, 실패" />}
           <Toggle checked={prefs.trend} onChange={(v) => updatePrefs({ trend: v })} label="급상승 키워드 알림" desc="트렌드 수집 결과 급상승 키워드 감지 시" />
-          <Toggle checked={prefs.rpa} onChange={(v) => updatePrefs({ rpa: v })} label="RPA 작업 결과 알림 (관리자)" desc="크롤링 작업 성공/실패" />
+          {isAdmin && <Toggle checked={prefs.rpa} onChange={(v) => updatePrefs({ rpa: v })} label="RPA 작업 결과 알림 (관리자)" desc="크롤링 작업 성공/실패" />}
         </section>
         <section className="card divide-y divide-line px-6 py-2">
           <Toggle checked={prefs.browser && perm === 'granted'} onChange={setBrowser} label="브라우저 알림"

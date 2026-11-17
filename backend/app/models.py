@@ -98,6 +98,7 @@ class Order(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     order_no: Mapped[str] = mapped_column(String(40), unique=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
     customer_name: Mapped[str] = mapped_column(String(100))
     customer_phone: Mapped[str] = mapped_column(String(50), default="")
     address: Mapped[str] = mapped_column(String(255), default="")

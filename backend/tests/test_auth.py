@@ -36,7 +36,7 @@ def test_admin_guard(client, user_headers, admin_headers):
     target = next(u for u in users if u["email"] == "new@fp.dev")
     res = client.patch(f"/api/admin/users/{target['id']}/role", json={"role": "admin"}, headers=admin_headers)
     assert res.json()["role"] == "admin"
-    me = next(u for u in users if u["role"] == "admin" and u["email"].startswith("admin"))
+    me = client.get("/api/auth/me", headers=admin_headers).json()
     assert client.patch(f"/api/admin/users/{me['id']}/role", json={"role": "user"}, headers=admin_headers).status_code == 400
 
 

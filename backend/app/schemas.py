@@ -34,7 +34,11 @@ class LoginIn(BaseModel):
 
 
 class TestLoginIn(BaseModel):
-    role: Literal["user", "admin"]
+    role: Literal["user", "admin"]  # admin -> 테스트 관리자(읽기 전용)
+
+
+class AdminLoginIn(BaseModel):
+    token: str = Field(min_length=1, max_length=512)
 
 
 class UserOut(ORM):
@@ -119,6 +123,13 @@ class OrderIn(BaseModel):
     items: list[OrderItemIn] = Field(min_length=1)
 
 
+class ShopOrderIn(BaseModel):
+    customer_name: str | None = Field(default=None, max_length=100)
+    customer_phone: str = Field(min_length=9, max_length=20)
+    address: str = Field(min_length=5, max_length=255)
+    items: list[OrderItemIn] = Field(min_length=1, max_length=20)
+
+
 class OrderItemOut(ORM):
     id: int
     product_id: int
@@ -132,6 +143,7 @@ class OrderItemOut(ORM):
 
 class OrderOut(ORM):
     id: int
+    user_id: int | None = None
     order_no: str
     customer_name: str
     customer_phone: str

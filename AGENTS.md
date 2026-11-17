@@ -15,5 +15,11 @@
 - Semantic colors: `bg-bg`, `bg-surface`, `bg-surface-2`, `text-fg`, `text-muted`, `border-line`, `accent`; dark mode via `.dark` on `<html>`.
 - New dependencies: pin versions published >= 7 days ago (`uv pip --exclude-newer`, `npm install --before=<date>`).
 
+## Roles (frontend + backend must stay in sync)
+- `user`: storefront (shop, product detail, order, mypage).
+- `admin` (real admin): only via `POST /api/auth/admin-login` with `.env` `ADMIN_TOKEN`; full CRUD. Write endpoints use `require_admin`.
+- `test_admin`: from "테스트 관리자 로그인"; sees every admin view (`require_admin_read`) but all non-GET `/api/*` (except `/api/auth/*`) are blocked by the `read_only_guard` middleware in `main.py`. Frontend uses `WriteButton` / `useAuth().readOnly` to disable write actions.
+
 ## Local notes
+- The local `.env` may contain the real TiDB `DATABASE_URL`. For local experiments/tests run with `DATABASE_URL=` (empty) so SQLite is used; pytest's conftest already overrides it.
 - Ports 8000 / 5173 may be used by other local projects; use `--port 8001` / `--port 5174` and set `CORS_ORIGINS` / `VITE_API_BASE_URL` env accordingly.

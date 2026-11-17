@@ -1,9 +1,12 @@
+import hmac
 import secrets
+import time
+from collections import defaultdict, deque
 from urllib.parse import urlencode
 
 import httpx
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -11,8 +14,8 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..database import get_db, utcnow
 from ..models import User
-from ..schemas import LoginIn, RegisterIn, TestLoginIn, TokenOut, UserOut
-from ..security import create_access_token, create_token, decode_token, get_current_user, hash_password, verify_password
+from ..schemas import AdminLoginIn, LoginIn, RegisterIn, TestLoginIn, TokenOut, UserOut
+from ..security import ADMIN, TEST_ADMIN, create_access_token, create_token, decode_token, get_current_user, hash_password, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -48,6 +51,7 @@ def _issue(db: Session, user: User) -> TokenOut:
 def providers() -> dict:
     return {"oauth": {p: bool(c["client_id"] and c["client_secret"]) for p, c in settings.oauth.items()},
             "test_login": settings.enable_test_login,
+            "admin_login": bool(settings.admin_token),
             "test_accounts": {"user": settings.test_user_email, "admin": settings.test_admin_email}
             if settings.enable_test_login else {}}
 
@@ -72,14 +76,42 @@ def login(data: LoginIn, db: Session = Depends(get_db)):
 
 @router.post("/test-login", response_model=TokenOut)
 def test_login(data: TestLoginIn, db: Session = Depends(get_db)):
-    """포트폴리오 시연용 간편 로그인. 운영 환경에서는 ENABLE_TEST_LOGIN=false 로 차단."""
+    """시연용 간편 로그인. admin 요청은 '테스트 관리자(읽기 전용)' 권한으로 발급한다.
+    운영 환경에서는 ENABLE_TEST_LOGIN=false 로 차단."""
     if not settings.enable_test_login:
         raise HTTPException(403, "테스트 로그인이 비활성화되어 있습니다.")
     email = settings.test_admin_email if data.role == "admin" else settings.test_user_email
     user = db.scalar(select(User).where(User.email == email))
     if not user:
         raise HTTPException(404, "테스트 계정이 없습니다. 서버 초기화를 확인하세요.")
-    user.role = data.role
+    user.role = TEST_ADMIN if data.role == "admin" else "user"
+    return _issue(db, user)
+
+
+ADMIN_LOGIN_WINDOW, ADMIN_LOGIN_MAX_FAILS = 300, 5
+_admin_fails: dict[str, deque] = defaultdict(deque)
+
+
+@router.post("/admin-login", response_model=TokenOut)
+def admin_login(data: AdminLoginIn, request: Request, db: Session = Depends(get_db)):
+    """실제 관리자 진입: .env 의 ADMIN_TOKEN 과 일치해야 하며 전체 CRUD 권한을 부여한다."""
+    if not settings.admin_token:
+        raise HTTPException(503, "관리자 토큰(ADMIN_TOKEN)이 서버에 설정되지 않았습니다.")
+    ip = request.client.host if request.client else "unknown"
+    fails, now = _admin_fails[ip], time.monotonic()
+    while fails and now - fails[0] > ADMIN_LOGIN_WINDOW:
+        fails.popleft()
+    if len(fails) >= ADMIN_LOGIN_MAX_FAILS:
+        raise HTTPException(429, "관리자 인증 시도가 너무 많습니다. 5분 후 다시 시도하세요.")
+    if not hmac.compare_digest(data.token.encode(), settings.admin_token.encode()):
+        fails.append(now)
+        raise HTTPException(401, "관리자 토큰이 올바르지 않습니다.")
+    fails.clear()
+    user = db.scalar(select(User).where(User.email == settings.admin_email.lower()))
+    if not user:
+        user = User(email=settings.admin_email.lower(), name=settings.admin_name, provider="admin_token")
+        db.add(user)
+    user.role, user.is_active = ADMIN, True
     return _issue(db, user)
 
 
@@ -160,6 +192,8 @@ def oauth_callback(provider: str, code: str | None = None, state: str | None = N
     user = db.scalar(select(User).where(User.provider == provider, User.provider_id == provider_id))
     if not user and email and verified:
         user = db.scalar(select(User).where(User.email == email.lower()))
+        if user and user.provider == "admin_token":
+            user = None
     if not user:
         taken = bool(email) and db.scalar(select(User).where(User.email == email.lower())) is not None
         fallback = f"{provider}_{provider_id}@oauth.fashionpick"

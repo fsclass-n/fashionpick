@@ -60,12 +60,26 @@ export function AuthProvider({ children }) {
     [acceptToken],
   )
 
+  /** 실제 관리자: .env ADMIN_TOKEN 인증 */
+  const adminLogin = useCallback(
+    async (adminToken) => {
+      const res = await api('/api/auth/admin-login', { method: 'POST', body: { token: adminToken } })
+      return acceptToken(res.access_token, res.user)
+    },
+    [acceptToken],
+  )
+
   const refresh = useCallback(() => api('/api/auth/me').then(setUser), [])
 
-  const value = useMemo(
-    () => ({ user, token, loading, isAdmin: user?.role === 'admin', login, register, testLogin, logout, acceptToken, refresh }),
-    [user, token, loading, login, register, testLogin, logout, acceptToken, refresh],
-  )
+  const value = useMemo(() => {
+    const role = user?.role
+    return {
+      user, token, loading, login, register, testLogin, adminLogin, logout, acceptToken, refresh,
+      isAdmin: role === 'admin' || role === 'test_admin', // 관리자 화면 접근
+      isRealAdmin: role === 'admin', // 전체 CRUD
+      readOnly: role === 'test_admin', // 테스트 관리자: 읽기 전용
+    }
+  }, [user, token, loading, login, register, testLogin, adminLogin, logout, acceptToken, refresh])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

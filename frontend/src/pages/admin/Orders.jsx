@@ -5,10 +5,10 @@ import {
   faBolt, faBoxesStacked, faCheck, faChevronDown, faCircleNotch, faEye, faFileExcel, faFilePdf, faFileInvoice,
   faPaperPlane, faRotate, faTruckFast,
 } from '@fortawesome/free-solid-svg-icons'
-import { api, download } from '../lib/api'
-import { ORDER_STATUS, PO_STATUS, dateTime, won } from '../lib/format'
-import { useRealtime, useRealtimeEvent } from '../context/RealtimeContext'
-import { Badge, Empty, ErrorBox, Modal, PageHeader, Spinner, Tabs, useAsync } from '../components/ui'
+import { api, download } from '../../lib/api'
+import { ORDER_STATUS, PO_STATUS, dateTime, won } from '../../lib/format'
+import { useRealtime, useRealtimeEvent } from '../../context/RealtimeContext'
+import { Badge, Empty, ErrorBox, Modal, PageHeader, Spinner, Tabs, WriteButton, useAsync } from '../../components/ui'
 
 const STEPS = ['pending', 'sent', 'received']
 const METHOD = { email: '이메일', webhook: '웹훅', manual: '수동(전화·팩스)' }
@@ -93,10 +93,10 @@ function PurchaseOrders() {
     <>
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <Tabs value={status} onChange={setStatus} tabs={[{ value: '', label: '전체' }, ...STEPS.map((s) => ({ value: s, label: PO_STATUS[s].label }))]} />
-        <button className="btn-ghost self-start md:self-auto" disabled={busy === 'gen'}
+        <WriteButton className="btn-ghost self-start md:self-auto" disabled={busy === 'gen'}
           onClick={() => act('gen', () => api('/api/purchase-orders/generate', { method: 'POST' }), '미배정 주문을 발주서로 생성했습니다')}>
           <FontAwesomeIcon icon={busy === 'gen' ? faCircleNotch : faFileInvoice} spin={busy === 'gen'} /> 미배정 주문 발주서 생성
-        </button>
+        </WriteButton>
       </div>
       <ErrorBox error={error} />
       {loading && !data ? <Spinner /> : !data?.length ? <Empty title="발주서가 없습니다" icon={faFileInvoice} /> : (
@@ -130,15 +130,15 @@ function PurchaseOrders() {
                   <FontAwesomeIcon icon={faFilePdf} />PDF</button>
                 <span className="flex-1" />
                 {po.status === 'pending' && po.supplier_method !== 'manual' && (
-                  <button className="btn-accent px-3 py-1.5 text-xs" disabled={!!busy}
+                  <WriteButton className="btn-accent px-3 py-1.5 text-xs" disabled={!!busy}
                     onClick={() => act(`${po.id}-send`, () => api(`/api/purchase-orders/${po.id}/send`, { method: 'POST' }), '발주서를 발송했습니다')}>
-                    <FontAwesomeIcon icon={busy === `${po.id}-send` ? faCircleNotch : faPaperPlane} spin={busy === `${po.id}-send`} />공급처로 발송</button>
+                    <FontAwesomeIcon icon={busy === `${po.id}-send` ? faCircleNotch : faPaperPlane} spin={busy === `${po.id}-send`} />공급처로 발송</WriteButton>
                 )}
                 {po.status === 'pending' && po.supplier_method === 'manual' && (
-                  <button className="btn-primary px-3 py-1.5 text-xs" disabled={!!busy} onClick={() => setPoStatus(po, 'sent')}><FontAwesomeIcon icon={faCheck} />수동 발주 완료</button>
+                  <WriteButton className="btn-primary px-3 py-1.5 text-xs" disabled={!!busy} onClick={() => setPoStatus(po, 'sent')}><FontAwesomeIcon icon={faCheck} />수동 발주 완료</WriteButton>
                 )}
                 {po.status === 'sent' && (
-                  <button className="btn-primary px-3 py-1.5 text-xs" disabled={!!busy} onClick={() => setPoStatus(po, 'received')}><FontAwesomeIcon icon={faBoxesStacked} />입고 확인</button>
+                  <WriteButton className="btn-primary px-3 py-1.5 text-xs" disabled={!!busy} onClick={() => setPoStatus(po, 'received')}><FontAwesomeIcon icon={faBoxesStacked} />입고 확인</WriteButton>
                 )}
               </div>
             </article>
@@ -226,7 +226,7 @@ export default function Orders() {
       <PageHeader eyebrow="Orders & Purchase Orders" title={<>Order <span className="italic">automation</span></>}
         desc="주문이 들어오면 공급처별로 자동 분류해 발주서를 작성합니다. 미리보기·다운로드 후 이메일/웹훅으로 발송하고 입고까지 추적하세요."
         actions={<>
-          <button className="btn-accent" onClick={simulate} disabled={busy}><FontAwesomeIcon icon={busy ? faCircleNotch : faBolt} spin={busy} /> 테스트 주문 발생</button>
+          <WriteButton className="btn-accent" onClick={simulate} disabled={busy}><FontAwesomeIcon icon={busy ? faCircleNotch : faBolt} spin={busy} /> 테스트 주문 발생</WriteButton>
         </>} />
       <Tabs value={tab} onChange={(v) => setParams({ tab: v })}
         tabs={[{ value: 'orders', label: '주문 관리', icon: faTruckFast }, { value: 'po', label: '발주서', icon: faFileInvoice }]} />

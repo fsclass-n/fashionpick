@@ -14,6 +14,7 @@ os.environ.update({
     "AUTO_PURCHASE_ORDER": "true", "AUTO_SEND_PURCHASE_ORDER": "false", "SMTP_HOST": "",
     "SECRET_KEY": "test-secret-key-for-pytest-only-0123456789", "ORDER_WEBHOOK_SECRET": "hook-secret",
     "TELEGRAM_BOT_TOKEN": "", "DISCORD_WEBHOOK_URL": "",
+    "ADMIN_TOKEN": "real-admin-token-for-tests", "ADMIN_EMAIL": "owner@test.dev",
 })
 
 from fastapi.testclient import TestClient  # noqa: E402
@@ -39,5 +40,14 @@ def user_headers(client):
 
 
 @pytest.fixture(scope="session")
-def admin_headers(client):
+def test_admin_headers(client):
+    """테스트 관리자(읽기 전용)"""
     return _login(client, "admin")
+
+
+@pytest.fixture(scope="session")
+def admin_headers(client):
+    """실제 관리자 (.env ADMIN_TOKEN)"""
+    res = client.post("/api/auth/admin-login", json={"token": "real-admin-token-for-tests"})
+    assert res.status_code == 200, res.text
+    return {"Authorization": f"Bearer {res.json()['access_token']}"}

@@ -14,6 +14,10 @@ services:
         value: production
       - key: SECRET_KEY
         generateValue: true
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: owner@fashionpick.dev
       - key: DATABASE_URL
         sync: false
       - key: DB_SSL

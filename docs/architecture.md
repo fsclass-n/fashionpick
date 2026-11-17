@@ -45,10 +45,26 @@
 | `purchase_orders` | po_no, supplier_id, status(pending/sent/received), total_amount, send_channel, send_log |
 | `rpa_jobs` / `rpa_logs` | name, interval_minutes, enabled, last_status / job_name, status, triggered_by, items_count, message |
 
-## 4. 주요 API
+## 4. 권한 체계
+
+| 권한 | 진입 방법 | 할 수 있는 일 |
+|---|---|---|
+| 일반 회원 (`user`) | 회원가입 · 소셜 로그인 · 일반 회원 테스트 로그인 | 쇼핑, 주문, 마이페이지(주문 내역·알림 설정) |
+| 실제 관리자 (`admin`) | `/admin/login`에서 `.env`의 `ADMIN_TOKEN` 입력 (5회 실패 시 5분 잠금) | 관리자 화면 전체 + 모든 데이터 생성·수정·삭제 |
+| 테스트 관리자 (`test_admin`) | 로그인 화면의 "테스트 관리자 로그인" 버튼 | 관리자 화면 전체 조회만 가능 (읽기 전용) |
+
+- 테스트 관리자 차단 1단계: `main.py`의 `read_only_guard` 미들웨어가 테스트 관리자 토큰으로 들어온 모든 변경 요청(POST·PUT·PATCH·DELETE, `/api/auth/*` 제외)을 403으로 막습니다.
+- 차단 2단계: 각 변경 엔드포인트도 `require_admin`으로 실제 관리자만 허용합니다.
+- 프런트엔드는 `WriteButton`으로 변경 버튼에 잠금 아이콘을 표시하고 비활성화합니다. 관리자 콘솔 상단에는 읽기 전용 배너가 표시됩니다.
+- 테스트 관리자 계정은 서버가 기동할 때마다 `test_admin` 권한으로 고정되고, 관리자 화면에서 권한을 바꿀 수 없습니다.
+
+## 5. 주요 API
 
 | Method | Path | 설명 |
 |---|---|---|
+| GET | `/api/shop/home` · `/api/shop/products` · `/api/shop/products/{id}` | 스토어프런트 공개 API (도매가·공급처 비노출) |
+| POST | `/api/shop/orders` · GET `/api/me/orders` | 회원 주문(→ 발주서 자동 생성) / 내 주문 내역 |
+| POST | `/api/auth/admin-login` | 실제 관리자 토큰 인증 |
 | POST | `/api/auth/register` · `/login` · `/test-login` | 회원가입 / 로그인 / 테스트 간편 로그인 (JWT 발급) |
 | GET | `/api/auth/oauth/{google\|naver\|kakao}/login` | 소셜 로그인 (state = 서명된 JWT) |
 | GET | `/api/trends/public-top` | 로그인 페이지 실시간 TOP N (공개) |
@@ -61,7 +77,7 @@
 | GET/PATCH | `/api/admin/users[/{id}/role]` | 회원 권한 관리 |
 | WS | `/ws?token=` | `order.created` · `po.created` · `po.updated` · `po.failed` · `trend.surge` · `rpa.job` · `user.role` |
 
-## 5. 보안
+## 6. 보안
 
 - 비밀번호 규칙: 영문 대문자·소문자, 숫자, 특수문자를 포함한 8~64자. 프런트엔드와 백엔드에서 같은 규칙으로 검사합니다.
 - OAuth 계정 연결: 제공자가 이메일 인증을 확인한 경우에만 기존 계정과 연결합니다. 리다이렉트 주소는 `CORS_ORIGINS`에 등록된 주소만 허용합니다.

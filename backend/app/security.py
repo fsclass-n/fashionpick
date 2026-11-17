@@ -79,7 +79,28 @@ def get_current_user(
     return user
 
 
-def require_admin(user: User = Depends(get_current_user)) -> User:
-    if user.role != "admin":
+ADMIN = "admin"
+TEST_ADMIN = "test_admin"
+ADMIN_ROLES = {ADMIN, TEST_ADMIN}
+READ_ONLY_MESSAGE = "테스트 관리자 계정은 읽기 전용입니다. 데이터 생성·수정·삭제는 실제 관리자만 할 수 있습니다."
+
+
+def require_admin_read(user: User = Depends(get_current_user)) -> User:
+    """관리자 화면 조회: 실제 관리자 + 테스트 관리자."""
+    if user.role not in ADMIN_ROLES:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "관리자 권한이 필요합니다.")
     return user
+
+
+def require_admin(user: User = Depends(get_current_user)) -> User:
+    """데이터 생성·수정·삭제: 실제 관리자만."""
+    if user.role == TEST_ADMIN:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, READ_ONLY_MESSAGE)
+    if user.role != ADMIN:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "관리자 권한이 필요합니다.")
+    return user
+
+
+def is_read_only_token(db: Session, token: str) -> bool:
+    user = user_from_token(db, token)
+    return bool(user and user.role == TEST_ADMIN)

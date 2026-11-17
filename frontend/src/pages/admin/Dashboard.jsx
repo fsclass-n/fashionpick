@@ -3,17 +3,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faArrowRight, faBagShopping, faBolt, faFileInvoice, faFire, faShirt, faWonSign,
 } from '@fortawesome/free-solid-svg-icons'
-import { api } from '../lib/api'
-import { ORDER_STATUS, dateTime, pct, won } from '../lib/format'
-import { useRealtime, useRealtimeEvent } from '../context/RealtimeContext'
-import { useAuth } from '../context/AuthContext'
-import { Badge, Empty, ErrorBox, PageHeader, Spinner, StatCard, useAsync } from '../components/ui'
-import { EVENT_ICONS } from '../components/Toasts'
+import { api } from '../../lib/api'
+import { ORDER_STATUS, dateTime, pct, won } from '../../lib/format'
+import { useRealtime, useRealtimeEvent } from '../../context/RealtimeContext'
+import { useAuth } from '../../context/AuthContext'
+import { Badge, Empty, ErrorBox, PageHeader, Spinner, StatCard, WriteButton, useAsync } from '../../components/ui'
+import { EVENT_ICONS } from '../../components/Toasts'
 
 const FLOW = [
   { step: '01', title: 'Trend', desc: '네이버 데이터랩·랭킹 페이지에서 키워드 수집', to: '/trends' },
-  { step: '02', title: 'Sourcing', desc: '키워드로 도매 상품·이미지 자동 수집', to: '/sourcing' },
-  { step: '03', title: 'Order', desc: '주문 발생 시 공급처별 발주서 자동 작성·발송', to: '/orders' },
+  { step: '02', title: 'Sourcing', desc: '키워드로 도매 상품·이미지 자동 수집', to: '/admin/sourcing' },
+  { step: '03', title: 'Order', desc: '주문 발생 시 공급처별 발주서 자동 작성·발송', to: '/admin/orders' },
 ]
 
 export default function Dashboard() {
@@ -32,7 +32,7 @@ export default function Dashboard() {
         eyebrow={`Hello, ${user?.name}`}
         title={<>Today’s <span className="italic">edit</span></>}
         desc="오늘의 트렌드와 소싱·주문·발주 현황을 한눈에 확인하세요."
-        actions={<button className="btn-accent" onClick={simulate}><FontAwesomeIcon icon={faBolt} /> 테스트 주문 발생</button>}
+        actions={<WriteButton className="btn-accent" onClick={simulate}><FontAwesomeIcon icon={faBolt} /> 테스트 주문 발생</WriteButton>}
       />
       <ErrorBox error={error} />
       {loading && !data ? <Spinner /> : data && (
@@ -60,7 +60,7 @@ export default function Dashboard() {
                     </div>
                     {k.surge && <Badge tone="accent"><FontAwesomeIcon icon={faFire} />급상승</Badge>}
                     <span className={`w-14 text-right text-sm ${k.growth > 0 ? 'text-accent' : 'text-muted'}`}>{k.growth > 0 ? '+' : ''}{pct(k.growth)}</span>
-                    <Link to={`/sourcing?keyword=${encodeURIComponent(k.keyword)}`} className="btn-ghost hidden px-3 py-1.5 text-xs sm:inline-flex">소싱</Link>
+                    <Link to={`/admin/sourcing?keyword=${encodeURIComponent(k.keyword)}`} className="btn-ghost hidden px-3 py-1.5 text-xs sm:inline-flex">소싱</Link>
                   </li>
                 ))}
               </ol>
@@ -92,7 +92,7 @@ export default function Dashboard() {
           <section className="card p-6">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-2xl">Recent orders</h2>
-              <Link to="/orders" className="text-sm text-muted hover:text-fg">주문 관리 <FontAwesomeIcon icon={faArrowRight} /></Link>
+              <Link to="/admin/orders" className="text-sm text-muted hover:text-fg">주문 관리 <FontAwesomeIcon icon={faArrowRight} /></Link>
             </div>
             <div className="table-wrap border-0">
               <table>

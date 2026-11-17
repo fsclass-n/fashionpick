@@ -37,8 +37,8 @@ def po_out(po: PurchaseOrder) -> dict:
             "supplier_name": po.supplier.name, "supplier_method": po.supplier.order_method, "items": po.items}
 
 
-def create_order(db: Session, data: OrderIn) -> Order:
-    order = Order(order_no=_code("FP"), customer_name=data.customer_name, customer_phone=data.customer_phone,
+def create_order(db: Session, data: OrderIn, user_id: int | None = None) -> Order:
+    order = Order(order_no=_code("FP"), user_id=user_id, customer_name=data.customer_name, customer_phone=data.customer_phone,
                   address=data.address, channel=data.channel)
     for item in data.items:
         product = db.get(Product, item.product_id)
@@ -51,7 +51,10 @@ def create_order(db: Session, data: OrderIn) -> Order:
     db.add(order)
     db.commit()
     manager.publish("order.created", {"id": order.id, "order_no": order.order_no, "customer_name": order.customer_name,
-                                      "total_amount": order.total_amount, "items": len(order.items)})
+                                      "total_amount": order.total_amount, "items": len(order.items)}, admin_only=True)
+    if user_id:
+        manager.publish("order.placed", {"id": order.id, "order_no": order.order_no, "total_amount": order.total_amount},
+                        user_id=user_id)
     bot_notify(f"[fashionpick] 신규 주문 {order.order_no} / {order.customer_name} / {order.total_amount:,}원")
 
     if settings.auto_purchase_order:
@@ -89,7 +92,7 @@ def generate_purchase_orders(db: Session, orders: list[Order] | None = None) -> 
     db.commit()
     for po in touched:
         manager.publish("po.created", {"id": po.id, "po_no": po.po_no, "supplier_name": po.supplier.name,
-                                       "total_amount": po.total_amount, "items": len(po.items)})
+                                       "total_amount": po.total_amount, "items": len(po.items)}, admin_only=True)
     return touched
 
 
@@ -115,12 +118,20 @@ def set_status(db: Session, po: PurchaseOrder, status: str, log_line: str = "") 
         po.sent_at = po.sent_at or now
     if log_line:
         po.send_log = (po.send_log + "\n" if po.send_log else "") + f"[{now:%Y-%m-%d %H:%M:%S}Z] {log_line}"
+    changed = []
     for order in {i.order for i in po.items}:
         statuses = {i.purchase_order.status if i.purchase_order else "none" for i in order.items}
-        order.status = ("stocked" if statuses == {"received"} else
-                        "ordered" if statuses <= {"sent", "received"} else "ordering")
+        new_status = ("stocked" if statuses == {"received"} else
+                      "ordered" if statuses <= {"sent", "received"} else "ordering")
+        if order.status != new_status and order.user_id:
+            changed.append(order)
+        order.status = new_status
     db.commit()
-    manager.publish("po.updated", {"id": po.id, "po_no": po.po_no, "status": po.status, "supplier_name": po.supplier.name})
+    manager.publish("po.updated", {"id": po.id, "po_no": po.po_no, "status": po.status, "supplier_name": po.supplier.name},
+                    admin_only=True)
+    for order in changed:
+        manager.publish("order.status", {"id": order.id, "order_no": order.order_no, "status": order.status},
+                        user_id=order.user_id)
     return po
 
 
@@ -152,7 +163,7 @@ def send_purchase_order(db: Session, po: PurchaseOrder) -> PurchaseOrder:
     except Exception as exc:  # noqa: BLE001 - 실패 내역을 발주서 로그에 남기고 대기 상태 유지
         po.send_log = (po.send_log + "\n" if po.send_log else "") + f"[{utcnow():%Y-%m-%d %H:%M:%S}Z] 발송 실패: {exc}"
         db.commit()
-        manager.publish("po.failed", {"id": po.id, "po_no": po.po_no, "error": str(exc)})
+        manager.publish("po.failed", {"id": po.id, "po_no": po.po_no, "error": str(exc)}, admin_only=True)
         raise HTTPException(502, f"발주서 발송 실패: {exc}") from exc
     bot_notify(f"[fashionpick] 발주서 {po.po_no} 발송 ({s.name}, {po.total_amount:,}원)")
     return set_status(db, po, "sent", log_line)

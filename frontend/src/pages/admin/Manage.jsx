@@ -1,21 +1,22 @@
 import { useMemo, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faCircleNotch, faDatabase, faPen, faPlay, faPlus, faRobot, faServer, faStore, faTrash, faUsers,
+  faCircleNotch, faDatabase, faPen, faPlay, faPlus, faRobot, faServer, faTrash, faUsers,
 } from '@fortawesome/free-solid-svg-icons'
-import { api } from '../lib/api'
-import { dateTime, pct, timeAgo } from '../lib/format'
-import { useAuth } from '../context/AuthContext'
-import { useRealtime, useRealtimeEvent } from '../context/RealtimeContext'
-import { Badge, ErrorBox, Modal, PageHeader, Spinner, StatCard, Tabs, Toggle, useAsync } from '../components/ui'
-import Plot from '../components/Plot'
+import { api } from '../../lib/api'
+import { dateTime, pct, timeAgo } from '../../lib/format'
+import { useAuth } from '../../context/AuthContext'
+import { useRealtime, useRealtimeEvent } from '../../context/RealtimeContext'
+import { Badge, ErrorBox, Modal, PageHeader, Spinner, StatCard, Toggle, WriteButton, useAsync } from '../../components/ui'
+import Plot from '../../components/Plot'
 
 const JOB_STATUS = { idle: ['muted', '대기'], running: ['warn', '실행 중'], success: ['success', '성공'], failed: ['danger', '실패'] }
 const INTERVALS = [15, 30, 60, 180, 360, 720, 1440]
 const intervalLabel = (m) => (m >= 60 ? `${m / 60}시간` : `${m}분`)
 
-function RpaPanel() {
+export function RpaPanel() {
   const { toast } = useRealtime()
+  const { readOnly } = useAuth()
   const jobs = useAsync(() => api('/api/admin/rpa/jobs'))
   const sys = useAsync(() => api('/api/admin/system'))
   const stats = useAsync(() => api('/api/admin/rpa/stats'))
@@ -78,14 +79,14 @@ function RpaPanel() {
               <p className="text-xs text-muted">마지막 실행 {j.last_run_at ? `${dateTime(j.last_run_at)} (${timeAgo(j.last_run_at)})` : '없음'}</p>
               <div className="flex items-center justify-between gap-3">
                 <label className="text-sm text-muted" htmlFor={`int-${j.name}`}>수집 주기</label>
-                <select id={`int-${j.name}`} className="input w-32 py-2" value={j.interval_minutes} onChange={(e) => patch(j.name, { interval_minutes: Number(e.target.value) })}>
+                <select id={`int-${j.name}`} className="input w-32 py-2 disabled:cursor-not-allowed disabled:opacity-60" disabled={readOnly} value={j.interval_minutes} onChange={(e) => patch(j.name, { interval_minutes: Number(e.target.value) })}>
                   {[...new Set([...INTERVALS, j.interval_minutes])].sort((a, b) => a - b).map((m) => <option key={m} value={m}>{intervalLabel(m)}</option>)}
                 </select>
               </div>
-              <Toggle checked={j.enabled} onChange={(v) => patch(j.name, { enabled: v })} label="주기 실행" desc="스케줄러가 주기마다 자동 실행" />
-              <button className="btn-primary mt-auto" disabled={j.running} onClick={() => run(j.name)}>
+              <Toggle checked={j.enabled} disabled={readOnly} onChange={(v) => patch(j.name, { enabled: v })} label="주기 실행" desc="스케줄러가 주기마다 자동 실행" />
+              <WriteButton className="btn-primary mt-auto" disabled={j.running} onClick={() => run(j.name)}>
                 <FontAwesomeIcon icon={j.running ? faCircleNotch : faPlay} spin={j.running} /> 지금 실행
-              </button>
+              </WriteButton>
             </article>
           )
         })}
@@ -139,7 +140,7 @@ function RpaPanel() {
 
 const EMPTY_SUPPLIER = { name: '', contact_name: '', phone: '', email: '', webhook_url: '', order_method: 'email', template: 'standard', address: '', memo: '' }
 
-function SupplierPanel() {
+export function SupplierPanel() {
   const { data, loading, error, reload } = useAsync(() => api('/api/suppliers'))
   const [edit, setEdit] = useState(null)
   const [err, setErr] = useState(null)
@@ -175,7 +176,7 @@ function SupplierPanel() {
 
   return (
     <>
-      <div className="mb-4 flex justify-end"><button className="btn-primary" onClick={() => setEdit({ ...EMPTY_SUPPLIER })}><FontAwesomeIcon icon={faPlus} />공급처 추가</button></div>
+      <div className="mb-4 flex justify-end"><WriteButton className="btn-primary" onClick={() => setEdit({ ...EMPTY_SUPPLIER })}><FontAwesomeIcon icon={faPlus} />공급처 추가</WriteButton></div>
       <ErrorBox error={error} />
       {loading && !data ? <Spinner /> : (
         <div className="table-wrap">
@@ -191,8 +192,8 @@ function SupplierPanel() {
                   <td className="text-muted">{s.template === 'simple' ? '간단형' : '표준형'}</td>
                   <td className="max-w-56 truncate text-muted">{s.order_method === 'webhook' ? s.webhook_url : s.email}</td>
                   <td className="text-right">
-                    <button className="px-2 text-muted hover:text-fg" onClick={() => setEdit({ ...s })} aria-label="수정"><FontAwesomeIcon icon={faPen} /></button>
-                    <button className="px-2 text-muted hover:text-danger" onClick={() => remove(s)} aria-label="삭제"><FontAwesomeIcon icon={faTrash} /></button>
+                    <button className="px-2 text-muted hover:text-fg" onClick={() => setEdit({ ...s })} aria-label="상세 / 수정" title="상세 / 수정"><FontAwesomeIcon icon={faPen} /></button>
+                    <WriteButton className="px-2 text-muted hover:text-danger disabled:opacity-40" onClick={() => remove(s)} aria-label="삭제"><FontAwesomeIcon icon={faTrash} /></WriteButton>
                   </td>
                 </tr>
               ))}
@@ -224,7 +225,7 @@ function SupplierPanel() {
             <div className="sm:col-span-2"><ErrorBox error={err} /></div>
             <div className="grid grid-cols-2 gap-2 sm:col-span-2">
               <button type="button" className="btn-ghost" onClick={() => setEdit(null)}>취소</button>
-              <button className="btn-accent">저장</button>
+              <WriteButton className="btn-accent">저장</WriteButton>
             </div>
           </form>
         )}
@@ -233,8 +234,8 @@ function SupplierPanel() {
   )
 }
 
-function UserPanel() {
-  const { user: me } = useAuth()
+export function UserPanel() {
+  const { user: me, readOnly } = useAuth()
   const { toast } = useRealtime()
   const [q, setQ] = useState('')
   const [query, setQuery] = useState('')
@@ -271,14 +272,15 @@ function UserPanel() {
                   <td className="text-muted">{dateTime(u.created_at)}</td>
                   <td className="text-muted">{timeAgo(u.last_login_at)}</td>
                   <td>
-                    <div className="inline-flex rounded-full border border-line p-0.5 text-xs">
+                    {u.role === 'test_admin' ? <Badge tone="warn">테스트 관리자 · 읽기 전용</Badge> : (
+                    <div className="inline-flex rounded-full border border-line p-0.5 text-xs" title={readOnly ? '테스트 관리자는 읽기 전용입니다' : undefined}>
                       {[['user', '일반 사용자'], ['admin', '관리자']].map(([r, l]) => (
-                        <button key={r} disabled={u.id === me.id && r === 'user'} onClick={() => u.role !== r && change(u, r)}
+                        <button key={r} disabled={readOnly || (u.id === me.id && r === 'user')} onClick={() => u.role !== r && change(u, r)}
                           className={`rounded-full px-3 py-1 transition disabled:opacity-40 ${u.role === r ? (r === 'admin' ? 'bg-accent text-white' : 'bg-fg text-bg') : 'text-muted hover:text-fg'}`}>
                           {l}
                         </button>
                       ))}
-                    </div>
+                    </div>)}
                   </td>
                 </tr>
               ))}
@@ -290,18 +292,32 @@ function UserPanel() {
   )
 }
 
-export default function Admin() {
-  const [tab, setTab] = useState('rpa')
+export function AdminRpa() {
   return (
     <>
-      <PageHeader eyebrow="Administrator" title={<>Control <span className="italic">room</span></>}
-        desc="Playwright 기반 RPA 작업 상태와 로그를 모니터링하고, 공급처와 회원 권한을 관리합니다." />
-      <Tabs value={tab} onChange={setTab} tabs={[
-        { value: 'rpa', label: 'RPA 작업', icon: faRobot }, { value: 'suppliers', label: '공급처', icon: faStore }, { value: 'users', label: '회원 권한', icon: faUsers },
-      ]} />
-      {tab === 'rpa' && <RpaPanel />}
-      {tab === 'suppliers' && <SupplierPanel />}
-      {tab === 'users' && <UserPanel />}
+      <PageHeader eyebrow="RPA Jobs" title={<>Crawler <span className="italic">monitor</span></>}
+        desc="Playwright 기반 트렌드 수집 · 도매 소싱 · 발주 작업의 실행 주기, 성공/실패 로그, 처리 건수를 모니터링합니다." />
+      <RpaPanel />
+    </>
+  )
+}
+
+export function AdminSuppliers() {
+  return (
+    <>
+      <PageHeader eyebrow="Suppliers" title={<>Supplier <span className="italic">book</span></>}
+        desc="공급처 연락처와 발주서 수신 방식(이메일·웹훅·수동), 발주 템플릿을 관리합니다." />
+      <SupplierPanel />
+    </>
+  )
+}
+
+export function AdminMembers() {
+  return (
+    <>
+      <PageHeader eyebrow="Members" title={<>Member <span className="italic">roles</span></>}
+        desc="전체 회원을 조회하고 일반 사용자 ⇄ 관리자 권한을 실시간으로 변경합니다." />
+      <UserPanel />
     </>
   )
 }

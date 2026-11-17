@@ -17,7 +17,7 @@ function WordCloud({ items }) {
       {shuffled.map((k) => {
         const t = (k.score - min) / (max - min || 1)
         return (
-          <Link key={k.keyword} to={`/sourcing?keyword=${encodeURIComponent(k.keyword)}`}
+          <Link key={k.keyword} to={`/shop?q=${encodeURIComponent(k.keyword)}`}
             className={`leading-none transition hover:text-accent ${k.surge ? 'text-accent' : t > 0.6 ? 'text-fg' : 'text-muted'}`}
             style={{ fontSize: `${0.8 + t * 1.9}rem`, fontWeight: 300 + Math.round(t * 5) * 100 }}
             title={`${k.category} · ${k.rank}위 · ${k.score}`}>
@@ -79,7 +79,7 @@ export default function Trends() {
   const collectedAt = latest.data?.[0]?.collected_at
 
   return (
-    <>
+    <div className="container-x pt-8 md:pt-12">
       <PageHeader eyebrow="Trend Keywords" title={<>What’s <span className="italic">trending</span></>}
         desc="RPA가 수집한 패션 키워드의 순위 변동, 검색량 추이, 카테고리별 비중입니다. 급상승 키워드는 자동으로 하이라이트됩니다."
         actions={<button className="btn-ghost" onClick={() => { latest.reload(); cats.reload(); hist.reload() }}><FontAwesomeIcon icon={faRotate} /> 새로고침</button>} />
@@ -128,7 +128,7 @@ export default function Trends() {
                         <td className="text-right">{k.score.toFixed(1)}</td>
                         <td className={`text-right ${k.growth > 0 ? 'text-accent' : 'text-muted'}`}>{k.growth > 0 ? '+' : ''}{pct(k.growth)}</td>
                         <td><RankChange k={k} /></td>
-                        <td><Link to={`/sourcing?keyword=${encodeURIComponent(k.keyword)}`} className="text-xs text-muted underline-offset-4 hover:text-fg hover:underline">소싱 →</Link></td>
+                        <td><Link to={`/shop?q=${encodeURIComponent(k.keyword)}`} className="text-xs text-muted underline-offset-4 hover:text-fg hover:underline">상품 보기 →</Link></td>
                       </tr>
                     ))}
                   </tbody>
@@ -150,6 +150,6 @@ export default function Trends() {
           )}
         </div>
       )}
-    </>
+    </div>
   )
 }

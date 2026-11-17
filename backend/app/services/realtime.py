@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from fastapi import WebSocket
 
 log = logging.getLogger("fashionpick.ws")
+ADMIN_ROLES = {"admin", "test_admin"}
 
 
 @dataclass(eq=False)
@@ -39,7 +40,7 @@ class ConnectionManager:
 
     def _dispatch(self, message: str, admin_only: bool, user_id: int | None) -> None:
         for c in list(self.clients):
-            if (admin_only and c.role != "admin") or (user_id is not None and c.user_id != user_id):
+            if (admin_only and c.role not in ADMIN_ROLES) or (user_id is not None and c.user_id != user_id):
                 continue
             c.queue.put_nowait(message)
 

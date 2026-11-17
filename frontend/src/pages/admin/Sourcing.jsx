@@ -4,11 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faCheck, faCircleNotch, faMagnifyingGlass, faRobot, faRotateLeft, faStore, faTag, faWandMagicSparkles, faXmark,
 } from '@fortawesome/free-solid-svg-icons'
-import { api, mediaUrl } from '../lib/api'
-import { CATEGORIES, pct, won } from '../lib/format'
-import { useAuth } from '../context/AuthContext'
-import { useRealtime, useRealtimeEvent } from '../context/RealtimeContext'
-import { Badge, Empty, ErrorBox, Modal, PageHeader, Spinner, Tabs } from '../components/ui'
+import { api, mediaUrl } from '../../lib/api'
+import { CATEGORIES, pct, won } from '../../lib/format'
+import { useRealtime, useRealtimeEvent } from '../../context/RealtimeContext'
+import { Badge, Empty, ErrorBox, Modal, PageHeader, Spinner, Tabs, WriteButton } from '../../components/ui'
 
 const SWATCH = { 블랙: '#1f1f1f', 아이보리: '#efe8da', 그레이: '#9a9a9a', 네이비: '#23304a', 베이지: '#d8c3a5', 브라운: '#6b4a35', 카키: '#6b6b47', 버건디: '#6d2233', 스카이블루: '#9cc3e0' }
 const PAGE = 30
@@ -48,11 +47,11 @@ function ProductCard({ p, onRegister, onUnregister }) {
         <div className="flex items-center justify-between pt-1">
           <span className={`text-[11px] ${p.stock > 0 ? 'text-muted' : 'text-danger'}`}>재고 {p.stock > 0 ? `${p.stock}개` : '확인 필요'}</span>
           {p.status === 'registered' ? (
-            <button className="text-[11px] text-muted underline-offset-4 hover:underline" onClick={() => onUnregister(p)}>
+            <WriteButton className="text-[11px] text-muted underline-offset-4 hover:underline disabled:no-underline disabled:opacity-60" onClick={() => onUnregister(p)}>
               <FontAwesomeIcon icon={faRotateLeft} className="mr-1" />등록 해제
-            </button>
+            </WriteButton>
           ) : (
-            <button className="btn-primary px-3 py-1.5 text-xs" onClick={() => onRegister(p)}><FontAwesomeIcon icon={faTag} />원클릭 등록</button>
+            <WriteButton className="btn-primary px-3 py-1.5 text-xs" onClick={() => onRegister(p)}><FontAwesomeIcon icon={faTag} />원클릭 등록</WriteButton>
           )}
         </div>
       </div>
@@ -111,7 +110,7 @@ function RegisterModal({ product, onClose, onDone }) {
         <ErrorBox error={error} />
         <div className="grid grid-cols-2 gap-2 pt-2">
           <button className="btn-ghost" onClick={onClose}>취소</button>
-          <button className="btn-accent" onClick={submit} disabled={busy || !name}>{busy && <FontAwesomeIcon icon={faCircleNotch} spin />}판매 상품으로 등록</button>
+          <WriteButton className="btn-accent" onClick={submit} disabled={busy || !name}>{busy && <FontAwesomeIcon icon={faCircleNotch} spin />}판매 상품으로 등록</WriteButton>
         </div>
       </div>
     </Modal>
@@ -120,7 +119,6 @@ function RegisterModal({ product, onClose, onDone }) {
 
 export default function Sourcing() {
   const [params, setParams] = useSearchParams()
-  const { isAdmin } = useAuth()
   const { toast } = useRealtime()
   const status = params.get('status') ?? 'sourced'
   const category = params.get('category') || ''
@@ -176,7 +174,7 @@ export default function Sourcing() {
     <>
       <PageHeader eyebrow="Wholesale Sourcing" title={<>Sourced <span className="italic">picks</span></>}
         desc="트렌드 키워드로 도매 사이트에서 수집한 상품입니다. 마진을 확인하고 원클릭으로 판매 상품에 등록하세요."
-        actions={isAdmin && <button className="btn-accent" onClick={runSourcing}><FontAwesomeIcon icon={faRobot} /> 지금 수집 실행</button>} />
+        actions={<WriteButton className="btn-accent" onClick={runSourcing}><FontAwesomeIcon icon={faRobot} /> 지금 수집 실행</WriteButton>} />
 
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <Tabs value={status} onChange={(v) => update({ status: v })}

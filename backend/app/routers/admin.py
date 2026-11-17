@@ -6,11 +6,11 @@ from ..config import settings
 from ..database import get_db
 from ..models import RpaJob, RpaLog, User
 from ..schemas import RoleIn, RpaJobOut, RpaJobUpdateIn, RpaLogOut, UserOut
-from ..security import require_admin
+from ..security import TEST_ADMIN, require_admin, require_admin_read
 from ..services import rpa_jobs
 from ..services.realtime import manager
 
-router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(require_admin)])
+router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(require_admin_read)])
 
 
 @router.get("/users", response_model=list[UserOut])
@@ -28,6 +28,8 @@ def change_role(user_id: int, data: RoleIn, db: Session = Depends(get_db), admin
         raise HTTPException(404, "회원을 찾을 수 없습니다.")
     if user.id == admin.id and data.role != "admin":
         raise HTTPException(400, "자기 자신의 관리자 권한은 해제할 수 없습니다.")
+    if user.role == TEST_ADMIN or user.email == settings.test_admin_email:
+        raise HTTPException(400, "테스트 관리자 계정의 권한은 변경할 수 없습니다.")
     user.role = data.role
     db.commit()
     manager.update_role(user.id, user.role)
@@ -43,7 +45,7 @@ def list_jobs(db: Session = Depends(get_db)):
 
 
 @router.patch("/rpa/jobs/{name}", response_model=RpaJobOut)
-def update_job(name: str, data: RpaJobUpdateIn, db: Session = Depends(get_db)):
+def update_job(name: str, data: RpaJobUpdateIn, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     job = db.scalar(select(RpaJob).where(RpaJob.name == name))
     if not job:
         raise HTTPException(404, "작업을 찾을 수 없습니다.")
@@ -54,7 +56,7 @@ def update_job(name: str, data: RpaJobUpdateIn, db: Session = Depends(get_db)):
 
 
 @router.post("/rpa/jobs/{name}/run", status_code=202)
-async def run_job(name: str):
+async def run_job(name: str, _: User = Depends(require_admin)):
     if name not in rpa_jobs.RUNNERS:
         raise HTTPException(404, "작업을 찾을 수 없습니다.")
     if rpa_jobs.is_running(name):

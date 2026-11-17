@@ -59,7 +59,7 @@ export function OrderPopup() {
         </div>
         <div className="grid grid-cols-2 gap-2 px-6 pb-6">
           <button className="btn-ghost" onClick={closePopup}>닫기</button>
-          <button className="btn-primary" onClick={() => { closePopup(); navigate('/orders?tab=po') }}>발주서 보기</button>
+          <button className="btn-primary" onClick={() => { closePopup(); navigate('/admin/orders?tab=po') }}>발주서 보기</button>
         </div>
       </div>
     </div>

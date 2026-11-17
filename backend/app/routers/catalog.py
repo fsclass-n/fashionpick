@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db, utcnow
 from ..models import Product, Supplier, User
 from ..schemas import ProductOut, ProductRegisterIn, SupplierIn, SupplierOut
-from ..security import get_current_user, require_admin
+from ..security import require_admin, require_admin_read
 from ..services import catalog
 
 router = APIRouter(prefix="/api", tags=["catalog"])
@@ -21,7 +21,7 @@ def _product(db: Session, product_id: int) -> Product:
 @router.get("/products")
 def list_products(status: str | None = None, category: str | None = None, keyword: str | None = None,
                   q: str | None = None, page: int = Query(1, ge=1), size: int = Query(40, ge=1, le=100),
-                  db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+                  db: Session = Depends(get_db), _: User = Depends(require_admin_read)):
     query = select(Product)
     if status:
         query = query.where(Product.status == status)
@@ -39,12 +39,12 @@ def list_products(status: str | None = None, category: str | None = None, keywor
 
 
 @router.get("/products/{product_id}", response_model=ProductOut)
-def get_product(product_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def get_product(product_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin_read)):
     return catalog.product_out(_product(db, product_id))
 
 
 @router.get("/products/{product_id}/suggest-name")
-def suggest_name(product_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def suggest_name(product_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin_read)):
     product = _product(db, product_id)
     return {"name": catalog.suggest_name(db, product), "sale_price": product.sale_price,
             "margin_rate": catalog.margin_rate(product.wholesale_price, product.sale_price)}
@@ -52,7 +52,7 @@ def suggest_name(product_id: int, db: Session = Depends(get_db), _: User = Depen
 
 @router.post("/products/{product_id}/register", response_model=ProductOut)
 def register_product(product_id: int, data: ProductRegisterIn, db: Session = Depends(get_db),
-                     _: User = Depends(get_current_user)):
+                     _: User = Depends(require_admin)):
     """원클릭 상품 등록: 이름 미입력 시 트렌드 키워드 기반 추천명 사용."""
     product = _product(db, product_id)
     product.registered_name = data.registered_name or catalog.suggest_name(db, product)
@@ -66,7 +66,7 @@ def register_product(product_id: int, data: ProductRegisterIn, db: Session = Dep
 
 
 @router.post("/products/{product_id}/unregister", response_model=ProductOut)
-def unregister_product(product_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def unregister_product(product_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     product = _product(db, product_id)
     product.status, product.registered_at = "sourced", None
     db.commit()
@@ -75,7 +75,7 @@ def unregister_product(product_id: int, db: Session = Depends(get_db), _: User =
 
 # ---------- 공급처 ----------
 @router.get("/suppliers", response_model=list[SupplierOut])
-def list_suppliers(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def list_suppliers(db: Session = Depends(get_db), _: User = Depends(require_admin_read)):
     return db.scalars(select(Supplier).order_by(Supplier.name)).all()
 
 

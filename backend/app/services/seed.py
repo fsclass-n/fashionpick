@@ -15,18 +15,24 @@ from ..config import settings
 from ..database import utcnow
 from ..models import Order, Product, TrendKeyword, User
 from ..schemas import OrderIn, OrderItemIn
-from ..security import hash_password
+from ..security import TEST_ADMIN, hash_password
 from . import catalog, ordering, trends
 from .rpa_jobs import ensure_jobs
 
 
 def seed_users(db: Session) -> None:
+    """테스트 계정 보장. 테스트 관리자 계정은 비밀번호가 공개되어 있으므로 매 기동 시 읽기 전용 권한으로 고정."""
     for email, name, role, password in (
-        (settings.test_user_email, "쇼핑몰 운영자", "user", settings.test_user_password),
-        (settings.test_admin_email, "시스템 관리자", "admin", settings.test_admin_password),
+        (settings.test_user_email, "테스트 회원", "user", settings.test_user_password),
+        (settings.test_admin_email, "테스트 관리자", TEST_ADMIN, settings.test_admin_password),
     ):
-        if not db.scalar(select(User).where(User.email == email)):
+        user = db.scalar(select(User).where(User.email == email))
+        if not user:
             db.add(User(email=email, name=name, role=role, password_hash=hash_password(password)))
+        else:
+            user.name = name
+            if role == TEST_ADMIN:
+                user.role = TEST_ADMIN
     db.commit()
 
 
