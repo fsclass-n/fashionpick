@@ -11,8 +11,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY requirements.txt .
+# Playwright 드라이버(node)는 slim 이미지에 없는 libatomic1·libstdc++6 이 필요해 먼저 설치한 뒤,
 # 빌드 타임에 Chromium 바이너리 + 시스템 종속성(폰트, libnss 등) 설치
-RUN pip install -r requirements.txt \
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libatomic1 libstdc++6 \
+ && pip install -r requirements.txt \
  && playwright install --with-deps chromium \
  && rm -rf /var/lib/apt/lists/*
 
