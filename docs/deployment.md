@@ -38,6 +38,7 @@ Docker로 한 번에 실행하려면 `docker compose up --build`를 쓰세요. A
 | `fashionpick-api` | Docker Web Service (`backend/Dockerfile`, context `.`) | https://fashionpick-api.onrender.com |
 | `fashionpick` | Static Site (`frontend`, `dist`) | https://fashionpick.onrender.com |
 
+- 두 서비스 모두 `autoDeploy: true`로 설정되어 있어, `main`에 푸시하면 Render가 Git 연동으로 자동 배포합니다. Deploy Hook은 쓰지 않습니다.
 - `.env.example`에서 **[Render 필수]**로 표시된 값을 Render 대시보드의 Environment에 등록합니다.
 - Dockerfile이 빌드할 때 `playwright install --with-deps chromium`을 실행하므로, Chromium과 시스템 종속성이 이미지에 포함됩니다.
 - 무료 티어는 15분 동안 요청이 없으면 슬립합니다. 슬립 중에는 스케줄러도 멈추고, 첫 요청 응답에 30초 이상 걸릴 수 있습니다.
@@ -70,7 +71,8 @@ https://fashionpick-api.onrender.com/api/auth/oauth/kakao/callback
 | 워크플로 | 트리거 | 내용 |
 |---|---|---|
 | `ci.yml` | push/PR | 백엔드 pytest, 프런트엔드 빌드 |
-| `deploy.yml` | CI 성공(main) | Render Deploy Hook 호출 (`RENDER_API_DEPLOY_HOOK`, `RENDER_WEB_DEPLOY_HOOK` secrets) 후 헬스체크 |
 | `pages.yml` | `docs/**` 변경 | `docs/` 폴더를 GitHub Pages(https://fsclass-n.github.io/fashionpick/)로 배포 |
+
+Render와 Netlify는 Git 연동으로 자동 배포되므로 별도의 배포 워크플로가 없습니다.
 
 GitHub 저장소의 Settings → Pages에서 Source를 **GitHub Actions**로 설정해야 합니다.
