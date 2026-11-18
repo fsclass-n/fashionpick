@@ -23,6 +23,7 @@
 [![fashionpick 10분 발표·시연](docs/video/video-thumbnail.png)](https://github.com/fsclass-n/fashionpick/releases/download/video-v1/fashionpick_final.mp4)
 
 - 본편 다운로드: [fashionpick_final.mp4](https://github.com/fsclass-n/fashionpick/releases/download/video-v1/fashionpick_final.mp4) (10:00 · 1080p · 58MB) · 자막 [SRT](https://github.com/fsclass-n/fashionpick/releases/download/video-v1/fashionpick_final.srt)
+- 저장소 파일: [docs/video/3조_final.mp4](docs/video/3조_final.mp4)
 - 60초 하이라이트: [docs/video/3조_highlight.mp4](docs/video/3조_highlight.mp4)
 - 발표자 김모란 · 내레이션은 여성 신경망 합성 음성(`ko-KR-SunHiNeural`)입니다. 대본·동선: [영상_대본_및_연출가이드.md](docs/video/영상_대본_및_연출가이드.md)
 

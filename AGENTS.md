@@ -25,7 +25,7 @@
 - Report results to the user in Korean.
 - Presentation: edit `docs/presentation.md`, then regenerate `docs/fashionpick_발표자료.pptx` with `.venv/Scripts/python tools/build_presentation.py` (deps: `tools/requirements.txt`).
 
-- Video: scenes/script in `docs/video/tools/scenes.py`; pipeline `tts.py` → `export_slides.ps1` → `record_demo.py` (creates 1 order on prod with the test user; `--admin-only` re-records admin part) → `compose.py` → `check_final.py` → `gen_guide.py`. ffmpeg via `winget install Gyan.FFmpeg`. Full MP4 is git-ignored and published as GitHub Release `video-v1` asset `fashionpick_final.mp4`.
+- Video: scenes/script in `docs/video/tools/scenes.py`; pipeline `tts.py` → `export_slides.ps1` → `record_demo.py` (creates 1 order on prod with the test user; `--admin-only` re-records admin part) → `compose.py` → `check_final.py` → `gen_guide.py`. ffmpeg via `winget install Gyan.FFmpeg`. Full MP4 is committed at `docs/video/3조_final.mp4` (keep < 95MB) and also published as GitHub Release `video-v1` asset `fashionpick_final.mp4`.
 
 ## Local notes
 - The local `.env` may contain the real TiDB `DATABASE_URL`. For local experiments/tests run with `DATABASE_URL=` (empty) so SQLite is used; pytest's conftest already overrides it.
