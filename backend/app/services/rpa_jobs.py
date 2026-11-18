@@ -53,6 +53,7 @@ def _product_sourcing(db) -> tuple[int, str]:
         raise RuntimeError("수집된 트렌드 키워드가 없습니다. 트렌드 수집을 먼저 실행하세요.")
     if settings.sourcing_mode == "crawl":
         keywords = trends.latest(db) or keywords  # 전 카테고리 키워드 (카테고리별로 번갈아 수집)
+        db.commit()  # 수집(수 분) 동안 DB 연결을 잡고 있지 않도록 반납 → 저장 시 새 연결(pre_ping)으로 재연결
         items = crawl(keywords, sources=settings.crawl_sources, delay=settings.crawl_delay,
                       max_items=settings.crawl_per_keyword, max_total=settings.crawl_max_total)
         if not items:
