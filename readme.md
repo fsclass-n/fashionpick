@@ -18,6 +18,24 @@
 | Frontend Production (Render) | https://fashionpick.onrender.com |
 | Backend API (Render) | https://fashionpick-api.onrender.com (`/docs`) |
 
+## 발표·시연 영상 (10분)
+
+[![fashionpick 10분 발표·시연](docs/video/video-thumbnail.png)](https://github.com/fsclass-n/fashionpick/releases/download/video-v1/fashionpick_final.mp4)
+
+- 본편 다운로드: [fashionpick_final.mp4](https://github.com/fsclass-n/fashionpick/releases/download/video-v1/fashionpick_final.mp4) (10:00 · 1080p · 58MB) · 자막 [SRT](https://github.com/fsclass-n/fashionpick/releases/download/video-v1/fashionpick_final.srt)
+- 60초 하이라이트: [docs/video/3조_highlight.mp4](docs/video/3조_highlight.mp4)
+- 발표자 김모란 · 내레이션은 여성 신경망 합성 음성(`ko-KR-SunHiNeural`)입니다. 대본·동선: [영상_대본_및_연출가이드.md](docs/video/영상_대본_및_연출가이드.md)
+
+| 시간 | 내용 |
+|---|---|
+| 00:00 | PPT 발표 — 문제 정의 · 아키텍처 · RPA 파이프라인 · 분석 로직 · 권한 · 배포 · 트러블슈팅 |
+| 03:38 | 일반 회원 시연 — 메인 · 트렌드 · 테스트 로그인 · 상품 상세 · 주문 → 발주서 자동 생성 · 마이페이지 |
+| 06:10 | 일반 회원의 관리자 주소 접근 차단 |
+| 06:25 | 테스트 관리자 시연 — 읽기 전용 배너 · 소싱 · 발주서 미리보기 · RPA 모니터 · 회원 권한(변경 잠금) |
+| 08:20 | 권한 비교 — 일반 회원 · 테스트 관리자 · 실제 관리자 |
+| 08:42 | 운영 API 문서 (`/docs`) |
+| 09:00 | 클로징 — 회고 · 향후 계획 · Q&A |
+
 ## 기술 스택
 
 | 영역 | 기술 |

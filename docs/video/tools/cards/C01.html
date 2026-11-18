@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1920px; height: 1080px; background: #F7F5F0; font-family: "Malgun Gothic", sans-serif; color: #111; padding: 64px 86px; }
+  .eyebrow { font-size: 15px; font-weight: 700; letter-spacing: .3em; color: #767676; }
+  h1 { font-size: 46px; margin-top: 14px; letter-spacing: -.01em; }
+  h1 em { font-family: Georgia, serif; font-weight: 400; }
+  .page { position: absolute; right: 86px; top: 56px; font-family: Georgia, serif; font-style: italic; font-size: 34px; }
+  .page small { font-size: 18px; color: #767676; }
+  .grid { margin-top: 52px; display: grid; grid-template-columns: 300px repeat(3, 1fr); border-top: 2px solid #111; }
+  .grid > div { padding: 22px 26px; border-bottom: 1px solid #E3DFD6; font-size: 22px; display: flex; align-items: center; gap: 12px; }
+  .head { font-weight: 700; font-size: 26px !important; padding-top: 30px !important; padding-bottom: 30px !important; }
+  .head small { display: block; font-size: 15px; font-weight: 400; color: #767676; margin-top: 4px; }
+  .rowh { font-weight: 700; color: #444; }
+  .c2 { background: #FFF6E5; }
+  .c3 { background: #111; color: #F4EFE6; border-bottom-color: #2B2B2B !important; }
+  .ok { color: #2F7D5B; font-weight: 800; }
+  .no { color: #B4302A; font-weight: 800; }
+  .ro { color: #B98A1E; font-weight: 800; }
+  .c3 .ok { color: #7FD1A8; }
+  .foot { position: absolute; left: 86px; right: 86px; bottom: 54px; display: flex; justify-content: space-between; border-top: 1px solid #E3DFD6; padding-top: 14px; font-size: 16px; color: #767676; }
+  .foot b { font-family: Georgia, serif; font-style: italic; color: #111; font-size: 19px; }
+  .foot b i { color: #B4532A; font-style: normal; }
+</style>
+</head>
+<body>
+  <p class="eyebrow">COMPARE · ROLE BASED ACCESS CONTROL</p>
+  <h1>같은 화면, <em>다른 권한</em></h1>
+  <p class="page">✓ <small>일반 회원 vs 테스트 관리자</small></p>
+  <div class="grid">
+    <div class="head"></div>
+    <div class="head">일반 회원<small>일반 회원 테스트 로그인</small></div>
+    <div class="head c2">테스트 관리자<small>테스트 관리자 로그인 · 읽기 전용</small></div>
+    <div class="head c3">실제 관리자<small style="color:#9B978E">.env ADMIN_TOKEN 인증</small></div>
+
+    <div class="rowh">쇼핑 · 주문</div><div><span class="ok">●</span> 가능</div><div class="c2"><span class="no">✕</span> 주문 차단</div><div class="c3"><span class="ok">●</span> 가능</div>
+    <div class="rowh">마이페이지 주문 단계</div><div><span class="ok">●</span> 본인 주문만</div><div class="c2"><span class="ok">●</span> 조회</div><div class="c3"><span class="ok">●</span> 조회</div>
+    <div class="rowh">관리자 화면</div><div><span class="no">✕</span> 메인으로 이동</div><div class="c2"><span class="ok">●</span> 전체 조회</div><div class="c3"><span class="ok">●</span> 전체 조회</div>
+    <div class="rowh">관리자 데이터 변경</div><div><span class="no">✕</span> 403</div><div class="c2"><span class="ro">🔒</span> 잠금 표시 + 서버 403</div><div class="c3"><span class="ok">●</span> 전체 CRUD</div>
+    <div class="rowh">실시간 알림</div><div>내 주문 상태</div><div class="c2">주문 · 발주 · RPA</div><div class="c3">주문 · 발주 · RPA</div>
+    <div class="rowh">차단 위치</div><div>RequireAuth + require_admin_read</div><div class="c2">read_only_guard + require_admin</div><div class="c3">—</div>
+  </div>
+</body>
+</html>
