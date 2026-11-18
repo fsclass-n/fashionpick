@@ -28,8 +28,8 @@ async def lifespan(_: FastAPI):
     with SessionLocal() as db:
         run_seed(db)
     scheduler = asyncio.create_task(rpa_jobs.scheduler_loop()) if settings.scheduler_enabled else None
-    if settings.sourcing_mode == "crawl" and settings.scheduler_enabled and not rpa_jobs.has_crawled_products():
-        rpa_jobs.spawn("product_sourcing", "startup")  # 실제 상품이 하나도 없으면 기동 직후 1회 수집
+    if settings.sourcing_mode == "crawl" and settings.scheduler_enabled and not rpa_jobs.crawl_coverage_ok():
+        rpa_jobs.spawn("product_sourcing", "startup")  # 실제 상품이 부족하거나 빈 카테고리가 있으면 기동 직후 1회 수집
     yield
     if scheduler:
         scheduler.cancel()

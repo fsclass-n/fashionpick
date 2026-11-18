@@ -70,15 +70,22 @@ def save_sourced(db: Session, items: list[dict], markup: float | None = None) ->
 
 
 def auto_register_crawled(db: Session, limit: int) -> int:
-    """크롤링 상품을 최신순으로 판매 등록해 쇼핑몰에 실제 상품이 보이게 한다 (원래 상품명 유지)."""
-    have = db.scalar(select(func.count(Product.id)).where(Product.status == "registered", ~Product.source_url.like("demo://%")))
-    need = max(0, limit - (have or 0))
-    rows = db.scalars(select(Product).where(Product.status == "sourced", ~Product.source_url.like("demo://%"))
-                      .order_by(Product.sourced_at.desc()).limit(need)).all()
-    for p in rows:
-        p.status, p.registered_at, p.registered_name = "registered", utcnow(), p.name
+    """크롤링 상품을 카테고리별로 고르게(카테고리당 limit/카테고리 수) 판매 등록한다 (원래 상품명 유지)."""
+    real = ~Product.source_url.like("demo://%")
+    cats = [c for (c,) in db.execute(select(Product.category).where(real).distinct()).all()]
+    if not cats:
+        return 0
+    per_cat = max(1, -(-limit // len(cats)))
+    done = 0
+    for cat in cats:
+        have = db.scalar(select(func.count(Product.id)).where(real, Product.category == cat, Product.status == "registered")) or 0
+        rows = db.scalars(select(Product).where(real, Product.category == cat, Product.status == "sourced")
+                          .order_by(Product.sourced_at.desc(), Product.id).limit(max(0, per_cat - have))).all()
+        for p in rows:
+            p.status, p.registered_at, p.registered_name = "registered", utcnow(), p.name
+        done += len(rows)
     db.commit()
-    return len(rows)
+    return done
 
 
 def product_out(p: Product) -> dict:

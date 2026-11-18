@@ -69,7 +69,9 @@ class Settings:
         self.crawl_sources = [s.strip() for s in os.getenv("CRAWL_SOURCES", "danawa,enuri").split(",") if s.strip()]
         self.crawl_delay = float(os.getenv("CRAWL_DELAY_SEC", "3.0"))
         self.crawl_markup = float(os.getenv("CRAWL_MARKUP", "1.15"))
-        self.crawl_auto_register = int(os.getenv("CRAWL_AUTO_REGISTER", "16"))
+        self.crawl_per_keyword = int(os.getenv("CRAWL_PER_KEYWORD", "7"))     # 키워드·사이트당 상품 수
+        self.crawl_max_total = int(os.getenv("CRAWL_MAX_TOTAL", "600"))        # 1회 수집 상한
+        self.crawl_auto_register = int(os.getenv("CRAWL_AUTO_REGISTER", "140"))  # 카테고리별로 고르게 판매 등록
         self.shop_hide_demo = _bool("SHOP_HIDE_DEMO", True)
 
         # 모의 결제: 토스페이먼츠 결제위젯(주문서형) 테스트 키(기본값 = 공식 문서 공개 테스트 키 gck/gsk 쌍) + 자체 무통장입금

@@ -2,7 +2,7 @@
 
 수집 한계(의도적으로 제한)
 - robots.txt 를 확인하고 Crawl-delay 를 지킨다 (search.danawa.com 10초, price.enuri.com 1초) — 설정 간격과 비교해 더 긴 값 사용
-- 1회 실행당 키워드 최대 MAX_KEYWORDS 개, 키워드·사이트당 상품 최대 MAX_ITEMS 개
+- 전 카테고리 키워드를 카테고리 순서대로 번갈아 수집, 키워드·사이트당 상품 최대 MAX_ITEMS 개, 1회 전체 최대 MAX_TOTAL 개
 - 검색 결과 HTML 1페이지만 읽고 상세 페이지·API(/api/*, /list/ajax/)는 호출하지 않는다
 - 이미지는 내려받지 않고 원본 URL 과 출처 링크만 저장한다 (화면에 출처 표시)
 """
@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 from ..common import RateLimiter, log
 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36 fashionpick-bot/1.0"
-MAX_KEYWORDS, MAX_ITEMS, TIMEOUT = 6, 5, 15
+MAX_KEYWORDS, MAX_ITEMS, MAX_TOTAL, TIMEOUT = 100, 7, 600, 15
 SOURCES = {
     "danawa": {"label": "다나와", "search": "https://search.danawa.com/?query={q}"},
     "enuri": {"label": "에누리", "search": "https://price.enuri.com/search?keyword={q}"},
@@ -104,13 +104,28 @@ def parse_enuri(html: str, base: str) -> list[dict]:
 PARSERS = {"danawa": parse_danawa, "enuri": parse_enuri}
 
 
+def round_robin(keywords: list[dict]) -> list[dict]:
+    """카테고리별로 묶어 번갈아 배치 → 중간에 상한에 닿아도 모든 카테고리가 고르게 수집된다."""
+    groups: dict[str, list[dict]] = {}
+    for k in keywords:
+        groups.setdefault(k["category"], []).append(k)
+    out, i = [], 0
+    while any(i < len(g) for g in groups.values()):
+        out += [g[i] for g in groups.values() if i < len(g)]
+        i += 1
+    return out
+
+
 def crawl(keywords: list[dict], sources=("danawa", "enuri"), delay: float = 3.0, max_keywords=MAX_KEYWORDS,
-          max_items=MAX_ITEMS) -> list[dict]:
+          max_items=MAX_ITEMS, max_total=MAX_TOTAL) -> list[dict]:
     """keywords: [{keyword, category}] → 공통 상품 dict 목록 (wholesale.py 와 같은 형식)."""
-    limiter, out = RateLimiter(delay), []
+    limiter, out, seen = RateLimiter(delay), [], set()
+    keywords = round_robin(keywords)
     session = requests.Session()
     session.headers.update({"User-Agent": UA, "Accept-Language": "ko-KR,ko;q=0.9"})
     for kw in keywords[:max_keywords]:
+        if len(out) >= max_total:
+            break
         for src in sources:
             conf = SOURCES[src]
             url = conf["search"].format(q=quote(kw["keyword"]))
@@ -126,7 +141,10 @@ def crawl(keywords: list[dict], sources=("danawa", "enuri"), delay: float = 3.0,
             except requests.RequestException as exc:
                 log.warning("%s 수집 실패 (%s): %s", conf["label"], kw["keyword"], exc)
                 continue
-            for it in PARSERS[src](res.text, res.url)[:max_items]:
+            for it in [x for x in PARSERS[src](res.text, res.url) if x["source_url"] not in seen][:max_items]:
+                if len(out) >= max_total:
+                    break
+                seen.add(it["source_url"])
                 out.append({
                     "supplier": conf["label"], "name": it["name"], "category": kw["category"], "keyword": kw["keyword"],
                     "wholesale_price": it["price"], "image_url": it["image_url"], "image_ratio": 1.0,

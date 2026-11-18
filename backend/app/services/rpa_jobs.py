@@ -7,6 +7,7 @@
 """
 import asyncio
 import logging
+from collections import Counter
 import threading
 from datetime import timedelta
 
@@ -51,12 +52,17 @@ def _product_sourcing(db) -> tuple[int, str]:
     if not keywords:
         raise RuntimeError("수집된 트렌드 키워드가 없습니다. 트렌드 수집을 먼저 실행하세요.")
     if settings.sourcing_mode == "crawl":
-        items = crawl(keywords, sources=settings.crawl_sources, delay=settings.crawl_delay)
+        keywords = trends.latest(db) or keywords  # 전 카테고리 키워드 (카테고리별로 번갈아 수집)
+        items = crawl(keywords, sources=settings.crawl_sources, delay=settings.crawl_delay,
+                      max_items=settings.crawl_per_keyword, max_total=settings.crawl_max_total)
         if not items:
             raise RuntimeError("다나와·에누리에서 수집된 상품이 없습니다 (차단·구조 변경 확인 필요).")
         created = catalog.save_sourced(db, items, markup=settings.crawl_markup)
         registered = catalog.auto_register_crawled(db, settings.crawl_auto_register)
-        return len(items), f"다나와·에누리 키워드 {min(len(keywords), 6)}개로 상품 {len(items)}건 수집 (신규 {created}건, 자동 등록 {registered}건)"
+        by_cat = Counter(i["category"] for i in items)
+        detail = ", ".join(f"{c} {n}" for c, n in by_cat.most_common())
+        return len(items), (f"다나와·에누리 키워드 {len({i['keyword'] for i in items})}개로 상품 {len(items)}건 수집 "
+                            f"(신규 {created}건, 자동 등록 {registered}건) — {detail}")
     items = source_products(keywords, settings.rpa_mode, targets=settings.wholesale_targets, headless=settings.rpa_headless,
                             user_agent=settings.rpa_user_agent, delay=settings.rpa_request_delay,
                             image_dir=STORAGE_DIR / "images")
@@ -130,10 +136,16 @@ def run_job(name: str, triggered_by: str = "scheduler") -> RpaLog:
             _running.discard(name)
 
 
-def has_crawled_products() -> bool:
+def crawl_coverage_ok(min_items: int = 200, min_categories: int = 7) -> bool:
+    """실제 수집 상품이 충분하고 모든 카테고리가 채워졌는지 (아니면 기동 직후 1회 수집)."""
+    from sqlalchemy import func
+
     from ..models import Product
+    real = ~Product.source_url.like("demo://%")
     with SessionLocal() as db:
-        return db.scalar(select(Product.id).where(~Product.source_url.like("demo://%")).limit(1)) is not None
+        total = db.scalar(select(func.count(Product.id)).where(real)) or 0
+        cats = db.scalar(select(func.count(func.distinct(Product.category))).where(real)) or 0
+    return total >= min_items and cats >= min_categories
 
 
 def is_running(name: str) -> bool:
