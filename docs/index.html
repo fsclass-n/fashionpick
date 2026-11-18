@@ -3,139 +3,419 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fashionpick · RPA 기반 패션 트렌드 · 소싱 · 발주 자동화 플랫폼</title>
-  <meta name="description" content="RPA로 트렌드 키워드를 수집하고, 도매 상품을 소싱하고, 주문 발생 시 발주서를 자동 작성하는 패션 쇼핑몰 운영 자동화 플랫폼" />
+  <title>fashionpick · From trend to order</title>
+  <meta name="description" content="RPA 기반 패션 트렌드 키워드 분석 · 도매 상품 소싱 · 발주 자동화 플랫폼 fashionpick 프로젝트 페이지" />
+  <meta property="og:title" content="fashionpick · From trend to order" />
+  <meta property="og:description" content="트렌드 키워드 수집부터 도매 소싱, 주문 시 발주서 자동 작성까지 — 4인 팀 프로젝트" />
+  <meta property="og:image" content="assets/screen-main.png" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='34' font-style='italic' fill='%23f4efe6'%3Ef%3C/text%3E%3Ccircle cx='46' cy='18' r='5' fill='%23b4532a'/%3E%3C/svg%3E" />
   <style>
-    :root { --bg:#f6f4ef; --fg:#111; --muted:#6b6862; --line:#e1ddd4; --accent:#b4532a; --surface:#fff; }
+    :root { --bg:#fff; --fg:#111; --muted:#767676; --line:#e9e9e9; --soft:#f4f3f0; --accent:#b4532a; --dark:#0e0d0c; }
     * { box-sizing: border-box; margin: 0; }
-    html { scroll-behavior: smooth; }
-    body { background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; line-height: 1.6; word-break: keep-all; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body { background: var(--bg); color: var(--fg); font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; line-height: 1.65; word-break: keep-all; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
     .serif { font-family: "Playfair Display", Georgia, "Times New Roman", serif; }
-    a { color: inherit; }
-    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
-    header { display: flex; justify-content: space-between; align-items: center; padding: 28px 0; }
-    .logo { font-size: 26px; font-style: italic; text-decoration: none; }
-    .logo i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: 4px; }
-    .eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-    .hero { padding: 80px 0 96px; border-bottom: 1px solid var(--line); }
-    .hero h1 { font-size: clamp(48px, 9vw, 112px); line-height: .95; font-weight: 400; margin-top: 18px; }
-    .hero h1 em { color: var(--accent); }
-    .hero p { max-width: 620px; color: var(--muted); margin-top: 28px; font-size: 17px; }
-    .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; }
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; font-size: 14px; background: var(--surface); }
-    .btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    @media (min-width: 768px) { .wrap { padding: 0 40px; } }
+    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; border: 1px solid var(--line); font-size: 14px; font-weight: 600; transition: .2s; background: #fff; }
+    .btn:hover { border-color: var(--fg); }
+    .btn.primary { background: var(--fg); color: #fff; border-color: var(--fg); }
+    .btn.primary:hover { opacity: .85; }
+
+    header { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+    header .wrap { display: flex; align-items: center; gap: 24px; height: 64px; }
+    .logo { font-size: 26px; font-style: italic; font-weight: 600; letter-spacing: -.01em; }
+    .logo i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 3px; }
+    nav.gnb { display: flex; gap: 22px; overflow-x: auto; scrollbar-width: none; font-size: 13px; font-weight: 700; letter-spacing: .04em; flex: 1; }
+    nav.gnb a { white-space: nowrap; color: var(--muted); }
+    nav.gnb a:hover { color: var(--fg); }
+    header .gh { font-size: 13px; padding: 8px 14px; }
+    @media (max-width: 640px) { header .gh { display: none; } }
+
     section { padding: 88px 0; border-bottom: 1px solid var(--line); }
-    h2 { font-size: clamp(32px, 5vw, 56px); font-weight: 400; margin: 12px 0 40px; line-height: 1.05; }
-    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 28px; }
-    .card .num { font-size: 44px; font-style: italic; color: var(--accent); }
-    .card h3 { font-size: 20px; margin: 8px 0; }
-    .card p, .card li { color: var(--muted); font-size: 14px; }
-    .card ul { padding-left: 18px; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); border-radius: 16px; overflow: hidden; }
+    h2 { font-size: clamp(28px, 4.2vw, 44px); line-height: 1.12; letter-spacing: -.02em; margin: 10px 0 14px; }
+    h2 em { font-family: "Playfair Display", Georgia, serif; font-weight: 400; }
+    .lead { color: var(--muted); max-width: 680px; font-size: 15px; }
+
+    .hero { background: var(--dark); color: #f4efe6; border: 0; padding: 0; position: relative; overflow: hidden; }
+    .hero::before { content: ""; position: absolute; width: 520px; height: 520px; left: -160px; top: -200px; border-radius: 50%; background: radial-gradient(circle, #b4532a 0%, transparent 65%); opacity: .45; filter: blur(20px); }
+    .hero::after { content: ""; position: absolute; width: 560px; height: 560px; right: -180px; bottom: -260px; border-radius: 50%; background: radial-gradient(circle, #6d2233 0%, transparent 60%); opacity: .5; filter: blur(20px); }
+    .hero .wrap { position: relative; z-index: 1; display: grid; gap: 48px; padding-top: 72px; padding-bottom: 72px; }
+    @media (min-width: 960px) { .hero .wrap { grid-template-columns: 1fr 1.1fr; align-items: center; } }
+    .hero .eyebrow { color: rgba(255,255,255,.55); }
+    .hero h1 { font-size: clamp(52px, 8.5vw, 104px); line-height: .92; font-weight: 400; margin-top: 18px; }
+    .hero h1 em { color: #e07a4f; }
+    .hero p.desc { color: rgba(255,255,255,.68); margin-top: 24px; max-width: 520px; font-size: 16px; }
+    .hero .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+    .hero .btn { background: transparent; color: #f4efe6; border-color: rgba(255,255,255,.25); }
+    .hero .btn.primary { background: #f4efe6; color: #111; border-color: #f4efe6; }
+    .hero figure { border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.12); }
+
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); border-bottom: 1px solid var(--line); }
+    @media (min-width: 768px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+    .stats div { padding: 28px 24px; border-right: 1px solid var(--line); }
+    .stats div:last-child { border-right: 0; }
+    .stats b { display: block; font-size: 34px; font-weight: 800; letter-spacing: -.02em; }
+    .stats span { font-size: 13px; color: var(--muted); }
+
+    .grid3 { display: grid; gap: 16px; margin-top: 40px; }
+    @media (min-width: 768px) { .grid3 { grid-template-columns: repeat(3, 1fr); } }
+    .card { border: 1px solid var(--line); border-radius: 18px; padding: 28px; background: #fff; }
+    .card .num { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 40px; color: var(--accent); line-height: 1; }
+    .card h3 { font-size: 19px; margin: 14px 0 8px; }
+    .card p, .card li { font-size: 14px; color: var(--muted); }
+    .card ul { padding-left: 18px; margin-top: 8px; }
+    .ba { margin-top: 16px; display: grid; gap: 8px; font-size: 13px; }
+    .ba span { display: block; padding: 10px 12px; border-radius: 10px; background: var(--soft); }
+    .ba span b { margin-right: 6px; }
+    .ba .after { background: #111; color: #fff; }
+
+    .flow { display: grid; margin-top: 40px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+    @media (min-width: 768px) { .flow { grid-template-columns: repeat(5, 1fr); } }
+    .flow div { padding: 24px; border-bottom: 1px solid var(--line); }
+    @media (min-width: 768px) { .flow div { border-bottom: 0; border-right: 1px solid var(--line); } .flow div:last-child { border-right: 0; } }
+    .flow small { font-size: 11px; font-weight: 700; letter-spacing: .2em; color: var(--accent); }
+    .flow b { display: block; font-size: 22px; font-family: "Playfair Display", Georgia, serif; font-style: italic; font-weight: 400; margin: 6px 0; }
+    .flow p { font-size: 13px; color: var(--muted); }
+
+    .arch { margin-top: 40px; display: grid; gap: 12px; font-size: 14px; }
+    .arch .row { display: grid; gap: 12px; }
+    @media (min-width: 768px) { .arch .row.two { grid-template-columns: 1fr 1fr; } .arch .row.three { grid-template-columns: repeat(3, 1fr); } }
+    .node { border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; background: #fff; }
+    .node.dark { background: #111; color: #fff; border-color: #111; }
+    .node.soft { background: var(--soft); }
+    .node b { display: block; margin-bottom: 4px; }
+    .node span { font-size: 13px; color: var(--muted); }
+    .node.dark span { color: rgba(255,255,255,.65); }
+    .arrow { text-align: center; color: var(--muted); font-size: 12px; letter-spacing: .1em; }
+
+    .shots { display: grid; gap: 18px; margin-top: 40px; }
+    @media (min-width: 768px) { .shots { grid-template-columns: repeat(2, 1fr); } }
+    .shot { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--soft); transition: .25s; }
+    .shot:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,.08); }
+    .shot figcaption { padding: 14px 18px; font-size: 13px; background: #fff; border-top: 1px solid var(--line); }
+    .shot figcaption b { display: block; font-size: 14px; }
+    .shot figcaption span { color: var(--muted); }
+    .mobiles { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .mobiles img { border-radius: 0; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .tbl { margin-top: 32px; border: 1px solid var(--line); border-radius: 16px; overflow: auto; }
     th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
-    th { font-size: 12px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; width: 220px; }
-    tr:last-child td, tr:last-child th { border-bottom: 0; }
-    .flow { display: grid; gap: 0; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
-    .flow div { padding: 24px; background: var(--surface); border-right: 1px solid var(--line); }
-    .flow div:last-child { border-right: 0; }
-    .flow b { display: block; font-size: 22px; font-style: italic; }
-    .flow span { font-size: 13px; color: var(--muted); }
-    .team { display: flex; flex-wrap: wrap; gap: 10px; }
-    .team span { padding: 10px 18px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
-    footer { padding: 48px 0; color: var(--muted); font-size: 13px; text-align: center; }
-    .dark { background: #0e0d0c; color: #f4efe6; }
-    .dark .card { background: #171717; border-color: #2b2b2b; }
-    .dark .card p, .dark .card li { color: #9b978e; }
-    .dark h2 em { color: #e07a4f; }
+    th { font-size: 12px; letter-spacing: .08em; color: var(--muted); background: var(--soft); white-space: nowrap; }
+    tr:last-child td { border-bottom: 0; }
+    td.k { font-weight: 700; white-space: nowrap; }
+    td .muted { color: var(--muted); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em; background: var(--soft); padding: 2px 6px; border-radius: 6px; }
+
+    .ts { display: grid; gap: 16px; margin-top: 40px; }
+    @media (min-width: 960px) { .ts { grid-template-columns: repeat(3, 1fr); } }
+    .ts .card dl { display: grid; gap: 10px; margin-top: 14px; font-size: 13px; }
+    .ts dt { font-size: 11px; font-weight: 700; letter-spacing: .16em; color: var(--accent); }
+    .ts dd { color: #333; margin: 2px 0 0; }
+
+    .agenda { margin-top: 40px; padding: 0; border-top: 2px solid var(--fg); }
+    @media (min-width: 768px) { .agenda { column-count: 2; column-gap: 40px; } }
+    .agenda li { break-inside: avoid; }
+    .agenda li { list-style: none; display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .agenda li em { font-family: "Playfair Display", Georgia, serif; color: var(--muted); }
+    .agenda li small { color: var(--muted); font-size: 12px; }
+    .agenda li.mine b::after { content: "발표자 담당"; margin-left: 8px; font-size: 10px; font-weight: 700; color: #fff; background: var(--accent); padding: 2px 6px; border-radius: 4px; vertical-align: 2px; }
+    .agenda-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+
+    .team { display: grid; gap: 16px; margin-top: 40px; }
+    @media (min-width: 768px) { .team { grid-template-columns: repeat(4, 1fr); } }
+    .team .card.me { background: #111; color: #fff; border-color: #111; }
+    .team .card.me p, .team .card.me li { color: rgba(255,255,255,.7); }
+    .team .role { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--accent); }
+    .team .card.me .role { color: #f0a37c; }
+    .team h3 { margin-top: 10px; }
+
+    .docs { display: grid; gap: 16px; margin-top: 40px; }
+    @media (min-width: 768px) { .docs { grid-template-columns: repeat(3, 1fr); } }
+    .docs a.item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .docs a.item:hover { color: var(--accent); }
+    .docs a.item span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+    footer { background: #111; color: rgba(255,255,255,.6); padding: 48px 0; font-size: 13px; }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
+    footer .logo { color: #fff; }
+    .totop { position: fixed; right: 20px; bottom: 20px; width: 48px; height: 48px; border-radius: 50%; background: #fff; border: 1px solid var(--line); box-shadow: 0 6px 24px rgba(0,0,0,.12); display: grid; place-items: center; font-size: 18px; cursor: pointer; opacity: 0; pointer-events: none; transition: .3s; transform: translateY(12px); }
+    .totop.show { opacity: 1; pointer-events: auto; transform: none; }
+    .totop:hover { background: #111; color: #fff; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <a class="logo serif" href="./">fashionpick<i></i></a>
-      <a class="btn" href="https://github.com/fsclass-n/fashionpick">GitHub</a>
-    </header>
-
-    <div class="hero">
-      <p class="eyebrow">4인 팀 프로젝트 · RPA Commerce Automation</p>
-      <h1 class="serif">From <em>trend</em><br/>to order.</h1>
-      <p>fashionpick은 패션 쇼핑몰 운영을 자동화하는 커머스 플랫폼입니다. RPA(Playwright · BeautifulSoup)가 트렌드 키워드를 수집하고, 그 키워드로 도매 사이트에서 상품 이미지와 정보를 가져오며, 주문이 들어오면 공급처별 발주서(Excel/PDF)를 자동으로 작성해 발송하고 실시간으로 알립니다.</p>
-      <div class="btns">
-        <a class="btn primary" href="https://fashionpick.onrender.com">Production (Render)</a>
-        <a class="btn" href="https://fashionpick.netlify.app">Staging (Netlify)</a>
-        <a class="btn" href="https://fashionpick-api.onrender.com/docs">API Docs</a>
-      </div>
+  <header>
+    <div class="wrap">
+      <a class="logo serif" href="#top">fashionpick<i></i></a>
+      <nav class="gnb" aria-label="페이지 섹션">
+        <a href="#overview">OVERVIEW</a>
+        <a href="#pipeline">PIPELINE</a>
+        <a href="#architecture">ARCHITECTURE</a>
+        <a href="#screens">SCREENS</a>
+        <a href="#troubleshooting">TROUBLESHOOTING</a>
+        <a href="#presentation">PRESENTATION</a>
+        <a href="#team">TEAM</a>
+        <a href="#docs">DOCS</a>
+      </nav>
+      <a class="btn gh" href="https://github.com/fsclass-n/fashionpick">GitHub</a>
     </div>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">K-Digital 심화 Semi-Project · 3조 · 4인 팀</p>
+        <h1 class="serif">From <em>trend</em><br />to order.</h1>
+        <p class="desc">
+          fashionpick은 패션 쇼핑몰 운영자가 매일 손으로 하던 일 — 트렌드 파악, 도매 상품 찾기, 발주서 작성 — 을
+          RPA와 데이터 파이프라인으로 자동화한 패션 이커머스 플랫폼입니다.
+        </p>
+        <div class="btns">
+          <a class="btn primary" href="https://fashionpick.onrender.com">프로덕션 바로가기</a>
+          <a class="btn" href="https://fashionpick.netlify.app">스테이징</a>
+          <a class="btn" href="https://fashionpick-api.onrender.com/docs">API 문서</a>
+          <a class="btn" href="#presentation">발표 자료</a>
+        </div>
+      </div>
+      <figure><img src="assets/screen-main.png" alt="fashionpick 메인 페이지 룩북 화면" /></figure>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div><b>3종</b><span>RPA 자동화 작업 (60·180·30분 주기)</span></div>
+    <div><b>7 · 43</b><span>카테고리 · 시드 트렌드 키워드</span></div>
+    <div><b>27</b><span>pytest 케이스 (CI 매 푸시 실행)</span></div>
+    <div><b>3단계</b><span>권한 (회원 · 관리자 · 읽기 전용 테스트 관리자)</span></div>
   </div>
 
-  <section>
+  <section id="overview">
     <div class="wrap">
-      <p class="eyebrow">Service</p>
-      <h2 class="serif">Three automations</h2>
-      <div class="grid">
-        <div class="card"><div class="num serif">01</div><h3>트렌드 수집</h3><p>네이버 데이터랩 쇼핑인사이트 API, 패션 플랫폼 랭킹, SNS 해시태그에서 키워드를 모아 순위 변동·검색량 추이·급상승 여부를 분석합니다.</p></div>
-        <div class="card"><div class="num serif">02</div><h3>상품 소싱</h3><p>상위 트렌드 키워드로 도매 사이트를 검색해 상품 이미지·가격·옵션·재고를 수집하고, 판매가·마진율 계산과 트렌드 기반 상품명 추천으로 원클릭 등록합니다.</p></div>
-        <div class="card"><div class="num serif">03</div><h3>발주 자동화</h3><p>주문 발생 시 공급처별로 분류해 발주서(Excel/PDF)를 생성하고 이메일·웹훅으로 발송합니다. 대기 → 발송 완료 → 입고 확인 상태를 추적하고 WebSocket으로 알립니다.</p></div>
+      <p class="eyebrow">Problem → Solution</p>
+      <h2>세 가지 수작업을 <em>하나의 파이프라인</em>으로</h2>
+      <p class="lead">트렌드 키워드가 소싱 검색어가 되고, 소싱한 상품이 주문이 되고, 주문이 발주서가 됩니다. 서로 연결된 데이터인데도 매번 사람이 옮겨 적던 과정을 이어 붙였습니다.</p>
+      <div class="grid3">
+        <div class="card">
+          <div class="num">01</div><h3>트렌드 수집 · 분석</h3>
+          <p>네이버 데이터랩 쇼핑인사이트 API와 Playwright 랭킹 수집으로 키워드 순위 변동과 급상승을 탐지합니다.</p>
+          <div class="ba"><span><b>전</b>감과 SNS 확인에 의존</span><span class="after"><b>후</b>60분마다 자동 수집 · 급상승 자동 하이라이트</span></div>
+        </div>
+        <div class="card">
+          <div class="num">02</div><h3>도매 소싱 · 원클릭 등록</h3>
+          <p>상위 트렌드 키워드로 도매 상품·이미지를 수집하고 판매가·마진율·상품명을 추천합니다.</p>
+          <div class="ba"><span><b>전</b>키워드별 반복 검색 · 이미지 수동 저장</span><span class="after"><b>후</b>180분마다 자동 수집 · 버튼 하나로 판매 등록</span></div>
+        </div>
+        <div class="card">
+          <div class="num">03</div><h3>주문 → 발주 자동화</h3>
+          <p>주문 즉시 공급처별 발주서(Excel/PDF)를 만들고 이메일·웹훅으로 발송, WebSocket으로 실시간 알림합니다.</p>
+          <div class="ba"><span><b>전</b>주문마다 엑셀 작성 · 메일 발송</span><span class="after"><b>후</b>자동 생성 · 발송 · 입고까지 상태 추적</span></div>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="dark">
+  <section id="pipeline">
     <div class="wrap">
-      <p class="eyebrow">Pipeline</p>
-      <h2 class="serif">How it <em>flows</em></h2>
+      <p class="eyebrow">RPA Pipeline</p>
+      <h2>Collect → <em>Order</em></h2>
+      <p class="lead">asyncio 스케줄러가 주기마다 워커 스레드에서 작업을 실행합니다. 같은 작업은 동시에 한 번만 돌고, 모든 실행은 <code>rpa_logs</code>에 남습니다.</p>
       <div class="flow">
-        <div><b class="serif">Collect</b><span>RPA 스케줄러가 트렌드 키워드 수집</span></div>
-        <div><b class="serif">Analyze</b><span>pandas로 순위 변동·급상승 탐지</span></div>
-        <div><b class="serif">Source</b><span>Playwright로 도매 상품·이미지 수집</span></div>
-        <div><b class="serif">Order</b><span>주문 → 공급처별 발주서 자동 생성</span></div>
-        <div><b class="serif">Notify</b><span>WebSocket·텔레그램·디스코드 알림</span></div>
+        <div><small>STEP 1</small><b>Collect</b><p>데이터랩 API(앵커 키워드 정규화) + Playwright 랭킹 페이지, robots.txt 확인 · 요청 간격 2초</p></div>
+        <div><small>STEP 2</small><b>Analyze</b><p>pandas 스냅샷 비교 — 점수 +15% 또는 순위 +5 이상이면 급상승</p></div>
+        <div><small>STEP 3</small><b>Source</b><p>상위 8개 키워드로 도매 상품 수집, <code>source_url</code> 기준 upsert</p></div>
+        <div><small>STEP 4</small><b>Price</b><p>도매가 × 2.2 → 900원 엔딩 (39,500원 → 86,900원, 마진 54.5%)</p></div>
+        <div><small>STEP 5</small><b>Order</b><p>공급처별 발주서 병합 · openpyxl/ReportLab · SMTP·웹훅 · WebSocket</p></div>
       </div>
     </div>
   </section>
 
-  <section>
+  <section id="architecture">
     <div class="wrap">
-      <p class="eyebrow">Tech Stack</p>
-      <h2 class="serif">Built with</h2>
-      <table>
-        <tr><th>Frontend</th><td>React (Vite), Tailwind CSS v4, React Router, FontAwesome, Plotly.js, Playfair Display + Pretendard</td></tr>
-        <tr><th>Backend &amp; API</th><td>Python 3.11, FastAPI, WebSockets, SQLAlchemy 2, PyJWT, python-dotenv</td></tr>
-        <tr><th>Database</th><td>TiDB Cloud (MySQL 호환, TLS) · 로컬 개발 시 SQLite</td></tr>
-        <tr><th>RPA &amp; Data</th><td>Playwright (Chromium), BeautifulSoup4, Requests, NumPy, pandas, Plotly</td></tr>
-        <tr><th>Document</th><td>openpyxl (Excel 발주서), ReportLab (PDF 발주서), Jinja2</td></tr>
-        <tr><th>Cloud &amp; CI/CD</th><td>Render (Docker Web Service + Static Site), Netlify, Docker Compose, GitHub Actions, GitHub Pages</td></tr>
-        <tr><th>External</th><td>네이버 데이터랩 쇼핑인사이트, Google · Naver · Kakao OAuth, SMTP, Telegram · Discord Webhook</td></tr>
-      </table>
-    </div>
-  </section>
-
-  <section>
-    <div class="wrap">
-      <p class="eyebrow">Features</p>
-      <h2 class="serif">Interview-ready UX</h2>
-      <div class="grid">
-        <div class="card"><h3>반응형 Split 로그인</h3><ul><li>룩북 무드 그래픽 + 실시간 트렌드 TOP 10</li><li>운영자/관리자 테스트 간편 로그인</li><li>Google · 네이버 · 카카오 OAuth</li><li>상용 수준 비밀번호 규칙 실시간 검사</li></ul></div>
-        <div class="card"><h3>모바일 GNB</h3><ul><li>햄버거 ↔ X 모션</li><li>우측→좌측 슬라이딩 드로어</li><li>키워드 검색 · 카테고리 · 알림 설정</li></ul></div>
-        <div class="card"><h3>에디토리얼 디자인</h3><ul><li>모노톤 + 시즌 포인트 컬러</li><li>라이트/다크 모드</li><li>세리프 타이틀 / 본문 서체 이원화</li><li>부드러운 To the Top 버튼</li></ul></div>
-        <div class="card"><h3>관리자 컨트롤 룸</h3><ul><li>RPA 작업 주기·실행·로그·성공률</li><li>공급처 · 발주 템플릿 관리</li><li>일반 ⇄ 관리자 실시간 권한 변경</li></ul></div>
+      <p class="eyebrow">Architecture</p>
+      <h2>프런트 · 백엔드 <em>분리 배포</em></h2>
+      <p class="lead">정적 SPA는 Netlify(스테이징)와 Render Static(프로덕션)에, Playwright Chromium이 필요한 API는 Render Docker에 올렸습니다. 무료 티어 단일 인스턴스에 맞춰 RPA 엔진은 API 프로세스 안의 스케줄러 + 워커 스레드로 설계했습니다.</p>
+      <div class="arch">
+        <div class="row two">
+          <div class="node"><b>React (Vite) · Tailwind v4</b><span>Netlify · fashionpick.netlify.app (스테이징)</span></div>
+          <div class="node"><b>React (Vite) · Tailwind v4</b><span>Render Static · fashionpick.onrender.com (프로덕션)</span></div>
+        </div>
+        <p class="arrow">REST (JWT Bearer) · WebSocket /ws ↓</p>
+        <div class="node dark"><b>FastAPI · Render Docker (python:3.11-slim + Playwright Chromium, non-root)</b><span>auth · shop · trends · catalog · orders · admin · realtime &nbsp;/&nbsp; asyncio 스케줄러 → 워커 스레드 → rpa/*</span></div>
+        <p class="arrow">SQLAlchemy (PyMySQL + TLS) ↓ &nbsp;&nbsp; Playwright · Requests ↓</p>
+        <div class="row three">
+          <div class="node soft"><b>TiDB Cloud</b><span>운영 DB · MySQL 호환 · certifi TLS</span></div>
+          <div class="node soft"><b>SQLite</b><span>로컬 · 테스트 (DATABASE_URL만 전환)</span></div>
+          <div class="node soft"><b>외부 연동</b><span>데이터랩 API · 랭킹·도매 페이지 · SMTP · 웹훅 · OAuth</span></div>
+        </div>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>영역</th><th>기술</th><th>고른 이유</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Frontend</td><td>React 19 (Vite) · Tailwind CSS v4 · Plotly.js · FontAwesome</td><td class="muted">디자인 토큰과 <code>@utility</code>로 공통 규칙 관리, 다크 모드</td></tr>
+            <tr><td class="k">Backend</td><td>Python 3.11 · FastAPI · WebSockets · SQLAlchemy 2 · PyJWT</td><td class="muted">비동기 + WebSocket 기본 지원, <code>/docs</code> 자동 API 문서</td></tr>
+            <tr><td class="k">RPA · Data</td><td>Playwright · Requests · pandas · NumPy</td><td class="muted">자바스크립트 렌더링 페이지 수집, 스냅샷 비교·집계</td></tr>
+            <tr><td class="k">Document</td><td>openpyxl · ReportLab (한글 CID 폰트)</td><td class="muted">외부 서비스 없이 서버에서 Excel/PDF 발주서 생성</td></tr>
+            <tr><td class="k">Database</td><td>TiDB Cloud · SQLite</td><td class="muted">운영은 서버리스 MySQL 호환, 테스트는 매번 임시 SQLite</td></tr>
+            <tr><td class="k">Cloud · CI/CD</td><td>Render · Netlify · Docker · GitHub Actions · GitHub Pages</td><td class="muted">Git 연동 자동 배포, CI는 pytest + 프런트 빌드</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>
 
-  <section>
+  <section id="screens">
     <div class="wrap">
-      <p class="eyebrow">Team</p>
-      <h2 class="serif">The people</h2>
-      <div class="team"><span>박미금 (조장)</span><span>김모란</span><span>이오리</span><span>홍기흥</span></div>
-      <div class="btns">
-        <a class="btn" href="architecture.md">설계서 (architecture.md)</a>
-        <a class="btn" href="deployment.md">배포 가이드 (deployment.md)</a>
+      <p class="eyebrow">Screens</p>
+      <h2>상용 패션몰 수준의 <em>UI/UX</em></h2>
+      <p class="lead">모든 페이지가 같은 헤더·푸터를 쓰고, 처음 접속하면 메인 페이지가 열립니다. 제목은 Playfair Display, 본문은 Pretendard. 상품 그리드는 모바일 2열 · 태블릿 3열 · 데스크톱 4열, 이미지는 4:5 비율입니다.</p>
+      <div class="shots">
+        <figure class="shot"><a href="assets/screen-detail.png" target="_blank"><img src="assets/screen-detail.png" alt="상품 상세" loading="lazy" /></a><figcaption><b>상품 상세</b><span>색상별 이미지 · 옵션 선택 · 바로 구매 → 발주서 자동 생성</span></figcaption></figure>
+        <figure class="shot"><a href="assets/screen-trends.png" target="_blank"><img src="assets/screen-trends.png" alt="트렌드 리포트" loading="lazy" /></a><figcaption><b>트렌드 리포트</b><span>Plotly 검색 지수 추이 · 카테고리 트리맵 · 순위 변동</span></figcaption></figure>
+        <figure class="shot"><a href="assets/screen-login.png" target="_blank"><img src="assets/screen-login.png" alt="로그인" loading="lazy" /></a><figcaption><b>Split 로그인</b><span>실시간 트렌드 TOP 10 · 테스트 계정 · Google·네이버·카카오 OAuth</span></figcaption></figure>
+        <figure class="shot"><a href="assets/screen-admin.png" target="_blank"><img src="assets/screen-admin.png" alt="관리자 RPA 모니터" loading="lazy" /></a><figcaption><b>관리자 · RPA 모니터 (테스트 관리자)</b><span>읽기 전용 배너 · 잠금 표시된 변경 버튼</span></figcaption></figure>
+        <figure class="shot"><a href="assets/screen-po.png" target="_blank"><img src="assets/screen-po.png" alt="발주서 관리" loading="lazy" /></a><figcaption><b>주문 · 발주서</b><span>공급처별 발주서 · 대기 → 발송 완료 → 입고 확인</span></figcaption></figure>
+        <figure class="shot"><div class="mobiles"><img src="assets/screen-mobile.png" alt="모바일 메인" loading="lazy" /><img src="assets/screen-drawer.png" alt="모바일 Drawer 메뉴" loading="lazy" /></div><figcaption><b>모바일</b><span>햄버거 ↔ X 모션 · 우측 슬라이딩 Drawer · 카테고리 스크롤</span></figcaption></figure>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>권한</th><th>진입 방법</th><th>할 수 있는 일</th></tr></thead>
+          <tbody>
+            <tr><td class="k">일반 회원</td><td>회원가입 · 소셜 로그인 · 일반 회원 테스트 로그인</td><td class="muted">쇼핑 · 주문 · 마이페이지(주문 진행 단계 · 알림 설정)</td></tr>
+            <tr><td class="k">실제 관리자</td><td><code>/admin/login</code> + <code>.env</code>의 <code>ADMIN_TOKEN</code> (5회 실패 시 5분 잠금)</td><td class="muted">관리자 화면 전체 + 모든 데이터 생성·수정·삭제</td></tr>
+            <tr><td class="k">테스트 관리자</td><td>로그인 화면의 테스트 관리자 로그인</td><td class="muted">관리자 화면 조회만 — 변경 요청은 미들웨어와 <code>require_admin</code> 두 겹으로 차단</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>
 
-  <footer>© fashionpick · fsclass-n</footer>
+  <section id="troubleshooting">
+    <div class="wrap">
+      <p class="eyebrow">Troubleshooting</p>
+      <h2>추측 대신 <em>원인 확인</em></h2>
+      <div class="ts">
+        <div class="card">
+          <div class="num">01</div><h3>Render 배포 연쇄 장애</h3>
+          <dl>
+            <div><dt>현상</dt><dd><code>open Dockerfile: no such file</code> 이후 <code>libatomic.so.1</code> 없음 (exit 127)</dd></div>
+            <div><dt>분석</dt><dd>Playwright Node 드라이버의 ELF 의존성(DT_NEEDED)을 직접 확인</dd></div>
+            <div><dt>해결</dt><dd>Dockerfile 루트 이동, <code>libatomic1</code>·<code>libstdc++6</code> 선설치</dd></div>
+          </dl>
+        </div>
+        <div class="card">
+          <div class="num">02</div><h3>데이터랩 정규화 왜곡</h3>
+          <dl>
+            <div><dt>현상</dt><dd>요청마다 최댓값이 100으로 맞춰져 요청 사이 점수 비교 불가</dd></div>
+            <div><dt>분석</dt><dd>API 응답을 비교해 요청 단위 정규화임을 확인</dd></div>
+            <div><dt>해결</dt><dd>카테고리 앵커 키워드를 매 요청에 넣고 앵커 대비 비율로 환산</dd></div>
+          </dl>
+        </div>
+        <div class="card">
+          <div class="num">03</div><h3>스키마 변경 미반영</h3>
+          <dl>
+            <div><dt>현상</dt><dd>새 컬럼 <code>orders.user_id</code>가 기존 운영 DB에 생기지 않음</dd></div>
+            <div><dt>분석</dt><dd><code>create_all</code>은 없는 테이블만 생성</dd></div>
+            <div><dt>해결</dt><dd>기동 시 컬럼을 확인·추가하는 <code>ensure_schema</code>, 향후 Alembic</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="presentation">
+    <div class="wrap">
+      <p class="eyebrow">Presentation · 20 min · 17 slides</p>
+      <h2>발표 구성 <em>— 김모란</em></h2>
+      <p class="lead">백엔드 · RPA 파이프라인 · 데이터 분석 담당 김모란이 발표합니다. 슬라이드별 시각 자료, 본문, 발표자 스크립트, 예상 질문은 발표 구성안 문서에 있습니다.</p>
+      <ol class="agenda">
+        <li><em>01</em><b>표지</b><small>0:30</small></li>
+        <li><em>02</em><b>배경 및 문제 정의</b><small>1:00</small></li>
+        <li><em>03</em><b>핵심 가치 및 솔루션</b><small>1:00</small></li>
+        <li><em>04</em><b>전체 시스템 아키텍처</b><small>1:15</small></li>
+        <li><em>05</em><b>기술 스택 선정 이유</b><small>1:15</small></li>
+        <li class="mine"><em>06</em><b>RPA 수집 파이프라인</b><small>1:30</small></li>
+        <li class="mine"><em>07</em><b>트렌드 분석 · 가격 로직</b><small>1:30</small></li>
+        <li><em>08</em><b>주문 → 발주 자동화 · 실시간 알림</b><small>1:00</small></li>
+        <li><em>09</em><b>인증 · 보안과 3단계 권한</b><small>1:00</small></li>
+        <li><em>10</em><b>유저 플로우 시연</b><small>1:00</small></li>
+        <li><em>11</em><b>반응형 UI/UX · 디자인 시스템</b><small>1:00</small></li>
+        <li><em>12</em><b>관리자 백오피스</b><small>1:00</small></li>
+        <li><em>13</em><b>DevOps와 CI/CD</b><small>1:30</small></li>
+        <li class="mine"><em>14</em><b>트러블슈팅</b><small>2:00</small></li>
+        <li><em>15</em><b>협업과 문서화</b><small>0:50</small></li>
+        <li><em>16</em><b>회고와 향후 고도화</b><small>1:00</small></li>
+        <li><em>17</em><b>Q&amp;A · 라이브 데모</b><small>0:40</small></li>
+      </ol>
+      <div class="agenda-cta">
+        <a class="btn primary" href="https://github.com/fsclass-n/fashionpick/blob/main/docs/presentation.md">발표 구성안 전체 보기</a>
+        <a class="btn" href="https://fashionpick.onrender.com/login">테스트 계정으로 체험하기</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="team">
+    <div class="wrap">
+      <p class="eyebrow">Team · 3조</p>
+      <h2>The <em>people</em></h2>
+      <div class="team">
+        <div class="card"><p class="role">PM · ARCHITECTURE · DEVOPS</p><h3>박미금 <small>(조장)</small></h3><ul><li>일정·범위 관리, 시스템 구성</li><li>Docker 이미지, Render/Netlify 분리 배포</li><li>GitHub Actions CI · Pages</li></ul></div>
+        <div class="card me"><p class="role">BACKEND · RPA · DATA</p><h3>김모란 <small>(발표)</small></h3><ul><li>FastAPI 도메인 설계, DB 스키마·마이그레이션</li><li>트렌드 수집(앵커 정규화)·도매 소싱·스케줄러</li><li>트렌드 분석·가격·상품명 추천 로직</li></ul></div>
+        <div class="card"><p class="role">FRONTEND · UI/UX</p><h3>이오리</h3><ul><li>React 스토어프런트 · 공통 레이아웃</li><li>디자인 시스템 · 반응형 Drawer</li><li>관리자 화면 · Plotly 차트</li></ul></div>
+        <div class="card"><p class="role">ORDER · REALTIME · AUTH · QA</p><h3>홍기흥</h3><ul><li>발주서 Excel/PDF · SMTP·웹훅 발송</li><li>WebSocket 실시간 알림</li><li>OAuth · 3단계 권한 · pytest</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="docs">
+    <div class="wrap">
+      <p class="eyebrow">Documents</p>
+      <h2>Docs &amp; <em>deliverables</em></h2>
+      <div class="docs">
+        <div>
+          <p class="eyebrow">진행일지</p>
+          <a class="item" href="프로젝트_진행일지_1단계_기획분석.hwpx">1단계 · 기획분석<span>HWPX ↓</span></a>
+          <a class="item" href="프로젝트_진행일지_2단계_설계.hwpx">2단계 · 설계<span>HWPX ↓</span></a>
+          <a class="item" href="프로젝트_진행일지_3단계_구현.hwpx">3단계 · 구현<span>HWPX ↓</span></a>
+          <a class="item" href="프로젝트_진행일지_4단계_배포.hwpx">4단계 · 배포<span>HWPX ↓</span></a>
+          <a class="item" href="프로젝트_진행일지_5단계_피드백.hwpx">5단계 · 피드백<span>HWPX ↓</span></a>
+        </div>
+        <div>
+          <p class="eyebrow">산출물</p>
+          <a class="item" href="산출물/01_기획분석_산출물.hwpx">01 · 기획분석<span>HWPX ↓</span></a>
+          <a class="item" href="산출물/02_설계_산출물.hwpx">02 · 설계<span>HWPX ↓</span></a>
+          <a class="item" href="산출물/03_구현_산출물.hwpx">03 · 구현<span>HWPX ↓</span></a>
+          <a class="item" href="산출물/04_배포_산출물.hwpx">04 · 배포<span>HWPX ↓</span></a>
+          <a class="item" href="산출물/05_피드백_산출물.hwpx">05 · 피드백<span>HWPX ↓</span></a>
+        </div>
+        <div>
+          <p class="eyebrow">설계 · 가이드</p>
+          <a class="item" href="https://github.com/fsclass-n/fashionpick/blob/main/docs/presentation.md">발표 구성안<span>MD →</span></a>
+          <a class="item" href="https://github.com/fsclass-n/fashionpick/blob/main/docs/architecture.md">설계서 (architecture)<span>MD →</span></a>
+          <a class="item" href="https://github.com/fsclass-n/fashionpick/blob/main/docs/deployment.md">배포 가이드 (deployment)<span>MD →</span></a>
+          <a class="item" href="https://github.com/fsclass-n/fashionpick/blob/main/readme.md">README<span>MD →</span></a>
+          <a class="item" href="https://github.com/fsclass-n/fashionpick/blob/main/AGENTS.md">개발 규칙 (AGENTS)<span>MD →</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <a class="logo serif" href="#top">fashionpick<i></i></a>
+      <p>박미금(조장) · 김모란 · 이오리 · 홍기흥 — 포트폴리오용 데모 서비스로 실제 결제·배송은 이루어지지 않습니다.</p>
+    </div>
+  </footer>
+
+  <button class="totop" id="totop" aria-label="맨 위로 이동">↑</button>
+  <script>
+    const t = document.getElementById('totop')
+    addEventListener('scroll', () => t.classList.toggle('show', scrollY > 500), { passive: true })
+    t.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }))
+  </script>
 </body>
 </html>
