@@ -14,7 +14,7 @@ os.environ.update({
     "AUTO_PURCHASE_ORDER": "true", "AUTO_SEND_PURCHASE_ORDER": "false", "SMTP_HOST": "",
     "SECRET_KEY": "test-secret-key-for-pytest-only-0123456789", "ORDER_WEBHOOK_SECRET": "hook-secret",
     "TELEGRAM_BOT_TOKEN": "", "DISCORD_WEBHOOK_URL": "",
-    "ADMIN_TOKEN": "real-admin-token-for-tests", "ADMIN_EMAIL": "owner@test.dev",
+    "SOURCING_MODE": "demo", "TOSS_SECRET_KEY": "test_sk_dummy", "ADMIN_TOKEN": "real-admin-token-for-tests", "ADMIN_EMAIL": "owner@test.dev",
 })
 
 from fastapi.testclient import TestClient  # noqa: E402

@@ -12,6 +12,7 @@ export const timeAgo = (s) => {
 }
 
 export const ORDER_STATUS = {
+  pending_payment: { label: '결제 대기', tone: 'warn' },
   received: { label: '주문 접수', tone: 'muted' },
   ordering: { label: '발주 진행', tone: 'warn' },
   ordered: { label: '발주 완료', tone: 'accent' },

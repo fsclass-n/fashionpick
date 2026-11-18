@@ -13,6 +13,7 @@ from datetime import timedelta
 from fastapi import HTTPException
 from sqlalchemy import select
 
+from rpa.sourcing.price_compare import crawl
 from rpa.sourcing.wholesale import source_products
 from rpa.trend.collector import collect_trends
 
@@ -49,6 +50,13 @@ def _product_sourcing(db) -> tuple[int, str]:
     keywords = trends.top_keywords(db, limit=8)
     if not keywords:
         raise RuntimeError("수집된 트렌드 키워드가 없습니다. 트렌드 수집을 먼저 실행하세요.")
+    if settings.sourcing_mode == "crawl":
+        items = crawl(keywords, sources=settings.crawl_sources, delay=settings.crawl_delay)
+        if not items:
+            raise RuntimeError("다나와·에누리에서 수집된 상품이 없습니다 (차단·구조 변경 확인 필요).")
+        created = catalog.save_sourced(db, items, markup=settings.crawl_markup)
+        registered = catalog.auto_register_crawled(db, settings.crawl_auto_register)
+        return len(items), f"다나와·에누리 키워드 {min(len(keywords), 6)}개로 상품 {len(items)}건 수집 (신규 {created}건, 자동 등록 {registered}건)"
     items = source_products(keywords, settings.rpa_mode, targets=settings.wholesale_targets, headless=settings.rpa_headless,
                             user_agent=settings.rpa_user_agent, delay=settings.rpa_request_delay,
                             image_dir=STORAGE_DIR / "images")
@@ -120,6 +128,12 @@ def run_job(name: str, triggered_by: str = "scheduler") -> RpaLog:
         db.close()
         with _lock:
             _running.discard(name)
+
+
+def has_crawled_products() -> bool:
+    from ..models import Product
+    with SessionLocal() as db:
+        return db.scalar(select(Product.id).where(~Product.source_url.like("demo://%")).limit(1)) is not None
 
 
 def is_running(name: str) -> bool:

@@ -41,7 +41,15 @@ def get_db() -> Generator[Session, None, None]:
 def ensure_schema() -> None:
     """create_all 은 기존 테이블에 컬럼을 추가하지 않으므로, 신규 컬럼은 여기서 보강한다."""
     insp = inspect(engine)
-    if "orders" in insp.get_table_names() and "user_id" not in {c["name"] for c in insp.get_columns("orders")}:
-        with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE orders ADD COLUMN user_id INTEGER NULL"))
-            conn.execute(text("CREATE INDEX ix_orders_user_id ON orders (user_id)"))
+    if "orders" not in insp.get_table_names():
+        return
+    have = {c["name"] for c in insp.get_columns("orders")}
+    add = {"user_id": "INTEGER NULL", "payment_method": "VARCHAR(20) NOT NULL DEFAULT ''",
+           "payment_status": "VARCHAR(20) NOT NULL DEFAULT 'paid'", "payment_key": "VARCHAR(200) NULL",
+           "depositor_name": "VARCHAR(100) NOT NULL DEFAULT ''", "deposit_due_at": "DATETIME NULL", "paid_at": "DATETIME NULL"}
+    with engine.begin() as conn:
+        for col, ddl in add.items():
+            if col not in have:
+                conn.execute(text(f"ALTER TABLE orders ADD COLUMN {col} {ddl}"))
+                if col == "user_id":
+                    conn.execute(text("CREATE INDEX ix_orders_user_id ON orders (user_id)"))

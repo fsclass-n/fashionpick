@@ -58,6 +58,17 @@ def order_webhook(data: OrderIn, x_webhook_secret: str = Header(default=""), db:
     return ordering.order_out(ordering.create_order(db, data))
 
 
+@router.post("/orders/{order_id}/confirm-deposit", response_model=OrderOut)
+def confirm_deposit(order_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    """무통장입금 입금 확인 (실제 관리자만) → 결제 완료 → 발주서 자동 생성."""
+    order = db.get(Order, order_id)
+    if not order:
+        raise HTTPException(404, "주문을 찾을 수 없습니다.")
+    if order.payment_method != "bank" or order.payment_status != "pending":
+        raise HTTPException(400, "입금 대기 중인 무통장입금 주문이 아닙니다.")
+    return ordering.order_out(ordering.mark_paid(db, order))
+
+
 @router.get("/orders/{order_id}", response_model=OrderOut)
 def get_order(order_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin_read)):
     order = db.get(Order, order_id)

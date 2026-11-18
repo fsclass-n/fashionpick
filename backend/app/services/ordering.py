@@ -37,8 +37,14 @@ def po_out(po: PurchaseOrder) -> dict:
             "supplier_name": po.supplier.name, "supplier_method": po.supplier.order_method, "items": po.items}
 
 
-def create_order(db: Session, data: OrderIn, user_id: int | None = None) -> Order:
-    order = Order(order_no=_code("FP"), user_id=user_id, customer_name=data.customer_name, customer_phone=data.customer_phone,
+def create_order(db: Session, data: OrderIn, user_id: int | None = None, payment_method: str = "",
+                 paid: bool = True, depositor_name: str = "") -> Order:
+    """paid=False 면 '결제 대기'로 만들고, 결제 승인(mark_paid) 후에 발주서를 생성한다."""
+    order = Order(order_no=_code("FP"), user_id=user_id, customer_name=data.customer_name,
+                  payment_method=payment_method, payment_status="paid" if paid else "pending",
+                  status="received" if paid else "pending_payment", paid_at=utcnow() if paid else None,
+                  depositor_name=depositor_name or data.customer_name,
+                  deposit_due_at=(utcnow() + timedelta(hours=settings.bank["due_hours"])) if payment_method == "bank" and not paid else None, customer_phone=data.customer_phone,
                   address=data.address, channel=data.channel)
     for item in data.items:
         product = db.get(Product, item.product_id)
@@ -57,11 +63,33 @@ def create_order(db: Session, data: OrderIn, user_id: int | None = None) -> Orde
                         user_id=user_id)
     bot_notify(f"[fashionpick] 신규 주문 {order.order_no} / {order.customer_name} / {order.total_amount:,}원")
 
+    if paid:
+        _after_paid(db, order)
+    db.refresh(order)
+    return order
+
+
+def _after_paid(db: Session, order: Order) -> None:
     if settings.auto_purchase_order:
         pos = generate_purchase_orders(db, [order])
         if settings.auto_send_purchase_order:
             for po in pos:
                 send_purchase_order(db, po)
+
+
+def mark_paid(db: Session, order: Order, payment_key: str | None = None) -> Order:
+    """모의 결제 승인 / 무통장 입금 확인 → 결제 완료 → 발주 자동화로 연결."""
+    if order.payment_status == "paid":
+        return order
+    order.payment_status, order.status, order.paid_at = "paid", "received", utcnow()
+    if payment_key:
+        order.payment_key = payment_key
+    db.commit()
+    manager.publish("order.paid", {"id": order.id, "order_no": order.order_no, "method": order.payment_method,
+                                   "total_amount": order.total_amount}, admin_only=True)
+    if order.user_id:
+        manager.publish("order.status", {"id": order.id, "order_no": order.order_no, "status": "received"}, user_id=order.user_id)
+    _after_paid(db, order)
     db.refresh(order)
     return order
 

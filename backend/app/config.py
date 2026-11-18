@@ -64,6 +64,20 @@ class Settings:
         self.trend_scrape_targets = _json_list("TREND_SCRAPE_TARGETS")
         self.wholesale_targets = _json_list("WHOLESALE_TARGETS")
 
+        # 도매 소싱: crawl(다나와·에누리, requests+BeautifulSoup) | demo | playwright(WHOLESALE_TARGETS)
+        self.sourcing_mode = os.getenv("SOURCING_MODE", "crawl")
+        self.crawl_sources = [s.strip() for s in os.getenv("CRAWL_SOURCES", "danawa,enuri").split(",") if s.strip()]
+        self.crawl_delay = float(os.getenv("CRAWL_DELAY_SEC", "3.0"))
+        self.crawl_markup = float(os.getenv("CRAWL_MARKUP", "1.15"))
+        self.crawl_auto_register = int(os.getenv("CRAWL_AUTO_REGISTER", "16"))
+        self.shop_hide_demo = _bool("SHOP_HIDE_DEMO", True)
+
+        # 모의 결제: 토스페이먼츠 결제위젯(주문서형) 테스트 키(기본값 = 공식 문서 공개 테스트 키 gck/gsk 쌍) + 자체 무통장입금
+        self.toss_client_key = os.getenv("TOSS_CLIENT_KEY") or "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm"
+        self.toss_secret_key = os.getenv("TOSS_SECRET_KEY") or "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6"
+        self.bank = {"name": os.getenv("BANK_NAME", "패션은행(모의)"), "account": os.getenv("BANK_ACCOUNT", "000-0000-0000-00"),
+                     "holder": os.getenv("BANK_HOLDER", "(주)패션픽"), "due_hours": int(os.getenv("BANK_DUE_HOURS", "24"))}
+
         self.auto_purchase_order = _bool("AUTO_PURCHASE_ORDER", True)
         self.auto_send_purchase_order = _bool("AUTO_SEND_PURCHASE_ORDER", False)
         self.default_markup = float(os.getenv("DEFAULT_MARKUP", "2.2"))

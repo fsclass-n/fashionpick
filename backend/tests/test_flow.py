@@ -33,9 +33,13 @@ def test_admin_register_then_user_order_creates_po(client, user_headers, admin_h
     assert client.get(f"/api/shop/products/{reg['id']}").status_code == 200
 
     order = client.post("/api/shop/orders", headers=user_headers, json={
-        "customer_phone": "010-1234-5678", "address": "서울특별시 성동구 성수동",
+        "payment_method": "bank", "depositor_name": "테스트", "customer_phone": "010-1234-5678", "address": "서울특별시 성동구 성수동",
         "items": [{"product_id": reg["id"], "option": "블랙/M", "quantity": 2}]}).json()
     assert order["total_amount"] == reg["sale_price"] * 2 and order["user_id"]
+    assert order["status"] == "pending_payment" and order["payment"]["provider"] == "bank"
+    assert order["items"][0]["purchase_order_id"] is None  # 입금 전에는 발주하지 않음
+    order = client.post(f"/api/orders/{order['id']}/confirm-deposit", headers=admin_headers).json()
+    assert order["payment_status"] == "paid" and order["status"] in {"ordering", "received"}
     mine = client.get("/api/me/orders", headers=user_headers).json()
     assert any(o["id"] == order["id"] for o in mine)
 
@@ -81,8 +85,7 @@ def test_websocket_events_are_scoped(client, user_headers, test_admin_headers, a
             "customer_phone": "010-1234-5678", "address": "서울특별시 중구", "items": [{"product_id": product_id, "quantity": 1}]})
         assert res.status_code == 201
         assert user_ws.receive_json()["event"] == "order.placed"
-        admin_events = [admin_ws.receive_json()["event"] for _ in range(2)]
-        assert "order.created" in admin_events
+        assert admin_ws.receive_json()["event"] == "order.created"  # 결제 전이라 발주 이벤트는 아직 없음
 
 
 def test_placeholder_svg(client):

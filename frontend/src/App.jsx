@@ -16,6 +16,7 @@ const Terms = lazy(() => import('./pages/Info').then((m) => ({ default: m.Terms 
 const Privacy = lazy(() => import('./pages/Info').then((m) => ({ default: m.Privacy })))
 const Support = lazy(() => import('./pages/Info').then((m) => ({ default: m.Support })))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const PaymentResult = lazy(() => import('./pages/PaymentResult'))
 const AdminLayout = lazy(() => import('./components/AdminLayout'))
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'))
 const AdminSourcing = lazy(() => import('./pages/admin/Sourcing'))
@@ -51,6 +52,8 @@ export default function App() {
         <Route path="support" element={<Support />} />
         <Route path="mypage" element={<RequireAuth><MyPage /></RequireAuth>} />
         <Route path="settings" element={<Navigate to="/mypage?tab=notify" replace />} />
+        <Route path="payment/success" element={<RequireAuth><PaymentResult ok /></RequireAuth>} />
+        <Route path="payment/fail" element={<PaymentResult ok={false} />} />
         <Route path="admin" element={<RequireAuth admin><AdminLayout /></RequireAuth>}>
           <Route index element={<AdminDashboard />} />
           <Route path="sourcing" element={<AdminSourcing />} />

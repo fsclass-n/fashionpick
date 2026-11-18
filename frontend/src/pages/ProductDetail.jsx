@@ -10,6 +10,7 @@ import { pct, won } from '../lib/format'
 import { useAuth } from '../context/AuthContext'
 import { ErrorBox, Modal, Spinner, WriteButton, useAsync } from '../components/ui'
 import ProductCard from '../components/ProductCard'
+import { PAYMENT_METHODS, renderTossWidget, requestTossPayment } from '../lib/payments'
 
 const SWATCH = { 블랙: '#1f1f1f', 아이보리: '#efe8da', 그레이: '#9a9a9a', 네이비: '#23304a', 베이지: '#d8c3a5', 브라운: '#6b4a35', 카키: '#6b6b47', 버건디: '#6d2233', 스카이블루: '#9cc3e0' }
 const WISH_KEY = 'fp_wishlist'
@@ -42,9 +43,27 @@ function useWish(id) {
 
 function CheckoutModal({ open, onClose, product, option, quantity, onDone }) {
   const { user } = useAuth()
-  const [form, setForm] = useState({ customer_name: '', customer_phone: '', address: '' })
+  const [form, setForm] = useState({ customer_name: '', customer_phone: '', address: '', payment_method: 'card', depositor_name: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [toss, setToss] = useState(null) // { payment, widgets }
+  useEffect(() => {
+    if (!toss || toss.widgets) return
+    renderTossWidget(toss.payment, '#toss-methods', '#toss-agreement')
+      .then((widgets) => setToss((t) => ({ ...t, widgets })))
+      .catch((e) => setError(e))
+  }, [toss])
+  const pay = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await requestTossPayment(toss.widgets, toss.payment) // 결제창 → 성공 시 /payment/success 로 이동
+    } catch (err) {
+      setError(err)
+      setBusy(false)
+    }
+  }
+  useEffect(() => { if (!open) { setToss(null); setBusy(false) } }, [open])
   useEffect(() => { if (open) setForm((f) => ({ ...f, customer_name: f.customer_name || user?.name || '' })) }, [open, user])
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
   const submit = async (e) => {
@@ -52,7 +71,12 @@ function CheckoutModal({ open, onClose, product, option, quantity, onDone }) {
     setBusy(true)
     setError(null)
     try {
-      onDone(await api('/api/shop/orders', { method: 'POST', body: { ...form, items: [{ product_id: product.id, option, quantity }] } }))
+      const res = await api('/api/shop/orders', { method: 'POST', body: { ...form, items: [{ product_id: product.id, option, quantity }] } })
+      if (res.payment?.provider === 'toss') {
+        setToss({ payment: res.payment, widgets: null })
+        return
+      }
+      onDone(res)
     } catch (err) {
       setError(err)
     } finally {
@@ -69,16 +93,43 @@ function CheckoutModal({ open, onClose, product, option, quantity, onDone }) {
           <p className="mt-2 text-[15px] font-bold">{won(product.price * quantity)}</p>
         </div>
       </div>
+      {toss ? (
+        <div className="space-y-3">
+          <p className="text-[13px] text-muted">주문번호 <b className="text-fg">{toss.payment.order_id}</b> · 결제수단을 선택해 주세요 (테스트 결제)</p>
+          <div id="toss-methods" />
+          <div id="toss-agreement" />
+          <ErrorBox error={error} />
+          <button className="btn-primary w-full py-3.5 text-[15px]" disabled={busy || !toss.widgets} onClick={pay}>
+            {(busy || !toss.widgets) && <FontAwesomeIcon icon={faCircleNotch} spin />}{won(toss.payment.amount)} 결제하기
+          </button>
+        </div>
+      ) : (
       <form onSubmit={submit} className="space-y-4">
         <div><label className="label" htmlFor="co-name">받는 분</label><input id="co-name" className="input" value={form.customer_name} onChange={set('customer_name')} required maxLength={100} /></div>
         <div><label className="label" htmlFor="co-phone">연락처</label><input id="co-phone" className="input" value={form.customer_phone} onChange={set('customer_phone')} required minLength={9} maxLength={20} placeholder="010-0000-0000" inputMode="tel" /></div>
         <div><label className="label" htmlFor="co-addr">배송지</label><input id="co-addr" className="input" value={form.address} onChange={set('address')} required minLength={5} maxLength={255} placeholder="도로명 주소" /></div>
-        <p className="rounded-xl bg-surface-2 px-4 py-3 text-[12px] text-muted">데모 서비스로 실제 결제는 진행되지 않습니다. 주문 즉시 공급처별 발주서가 자동 생성됩니다.</p>
+        <fieldset>
+          <legend className="label">결제 수단</legend>
+          <div className="grid grid-cols-3 gap-2">
+            {PAYMENT_METHODS.map((m) => (
+              <label key={m.value} className={`cursor-pointer rounded-xl border px-3 py-3 text-center transition ${form.payment_method === m.value ? 'border-fg bg-fg text-bg' : 'border-line hover:border-fg'}`}>
+                <input type="radio" name="pay" value={m.value} checked={form.payment_method === m.value} onChange={set('payment_method')} className="sr-only" />
+                <span className="block text-[13px] font-semibold">{m.label}</span>
+                <span className={`mt-0.5 block text-[10px] ${form.payment_method === m.value ? 'text-bg/70' : 'text-muted'}`}>{m.desc}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        {form.payment_method === 'bank' && (
+          <div><label className="label" htmlFor="co-dep">입금자명</label><input id="co-dep" className="input" value={form.depositor_name} onChange={set('depositor_name')} maxLength={100} placeholder={form.customer_name || '입금자명'} /></div>
+        )}
+        <p className="rounded-xl bg-surface-2 px-4 py-3 text-[12px] text-muted">모의 결제입니다. 카드·간편결제는 토스페이먼츠 테스트 결제로 실제 출금이 없고, 무통장입금은 관리자 입금 확인 후 발주서가 자동 생성됩니다.</p>
         <ErrorBox error={error} />
         <WriteButton className="btn-primary w-full py-3.5 text-[15px]" disabled={busy}>
           {busy && <FontAwesomeIcon icon={faCircleNotch} spin />}{won(product.price * quantity)} 주문하기
         </WriteButton>
       </form>
+      )}
     </Modal>
   )
 }
@@ -194,7 +245,10 @@ export default function ProductDetail() {
               {p.in_stock ? '바로 구매하기' : '품절'}
             </WriteButton>
           </div>
-          <p className="mt-3 flex items-center gap-2 text-[12px] text-muted"><FontAwesomeIcon icon={faTruckFast} />주문 즉시 공급처 발주 · 평균 2~3일 내 출고</p>
+          <p className="mt-3 flex items-center gap-2 text-[12px] text-muted"><FontAwesomeIcon icon={faTruckFast} />결제 완료 즉시 공급처 발주 · 평균 2~3일 내 출고</p>
+          {p.origin && (
+            <p className="mt-1 text-[12px] text-muted">상품 정보·이미지 출처: <a href={p.origin.url} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-fg">{p.origin.label}</a> (가격비교 사이트 수집)</p>
+          )}
 
           <div className="mt-8 border-t border-line">
             <Accordion title="상품 정보" defaultOpen>
@@ -223,7 +277,14 @@ export default function ProductDetail() {
         onDone={(order) => { setCheckout(false); setDone(order) }} />
       <Modal open={!!done} onClose={() => setDone(null)} title="주문이 완료되었습니다">
         <p className="text-[14px]">주문번호 <b>{done?.order_no}</b></p>
-        <p className="mt-1 text-[13px] text-muted">결제 금액 {won(done?.total_amount)} · 공급처 발주가 자동으로 진행됩니다.</p>
+        {done?.payment?.provider === 'bank' ? (
+          <div className="mt-4 rounded-xl border border-line p-4 text-[13px] leading-6">
+            <p className="font-semibold">무통장입금 안내 (모의)</p>
+            <p>{done.payment.name} <b>{done.payment.account}</b> · 예금주 {done.payment.holder}</p>
+            <p>입금액 <b>{won(done.payment.amount)}</b> · 입금자명 {done.payment.depositor_name}</p>
+            <p className="text-muted">{done.payment.due_hours}시간 안에 입금해 주세요. 관리자 입금 확인 후 발주가 진행됩니다.</p>
+          </div>
+        ) : <p className="mt-1 text-[13px] text-muted">결제 금액 {won(done?.total_amount)}</p>}
         <div className="mt-6 grid grid-cols-2 gap-2">
           <button className="btn-ghost" onClick={() => setDone(null)}>쇼핑 계속하기</button>
           <Link to="/mypage" className="btn-primary">주문 내역 보기</Link>

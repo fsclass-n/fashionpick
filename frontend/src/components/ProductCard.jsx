@@ -9,7 +9,7 @@ export default function ProductCard({ p, rank }) {
   return (
     <Link to={`/products/${p.id}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden bg-surface-2">
-        <img src={mediaUrl(p.image_url)} alt={p.name} loading="lazy" onLoad={() => setLoaded(true)}
+        <img src={mediaUrl(p.image_url)} alt={p.name} loading="lazy" referrerPolicy="no-referrer" onLoad={() => setLoaded(true)}
           className={`size-full object-cover transition duration-700 ease-out group-hover:scale-[1.03] ${loaded ? 'opacity-100' : 'opacity-0'}`} />
         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1">
           {p.is_new && <span className="bg-fg px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-bg">NEW</span>}
@@ -27,7 +27,7 @@ export default function ProductCard({ p, rank }) {
         <p className="line-clamp-2 text-[13px] leading-snug text-fg/85 group-hover:underline group-hover:underline-offset-2">{p.name}</p>
         <p className="text-[15px] font-bold">{won(p.price)}</p>
         <p className="text-[11px] text-muted">
-          #{p.keyword}{p.trend_rank && p.trend_rank <= 20 && <span className="ml-1.5 text-accent">트렌드 {p.trend_rank}위</span>}
+          {p.origin && <span className="mr-1.5">{p.origin.label}</span>}#{p.keyword}{p.trend_rank && p.trend_rank <= 20 && <span className="ml-1.5 text-accent">트렌드 {p.trend_rank}위</span>}
         </p>
       </div>
     </Link>

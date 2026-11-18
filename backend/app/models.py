@@ -105,6 +105,12 @@ class Order(Base):
     channel: Mapped[str] = mapped_column(String(30), default="fashionpick")
     status: Mapped[str] = mapped_column(String(20), default="received", index=True)
     total_amount: Mapped[int] = mapped_column(Integer, default=0)
+    payment_method: Mapped[str] = mapped_column(String(20), default="")
+    payment_status: Mapped[str] = mapped_column(String(20), default="paid")
+    payment_key: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    depositor_name: Mapped[str] = mapped_column(String(100), default="")
+    deposit_due_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
 
     items: Mapped[list["OrderItem"]] = relationship(back_populates="order", cascade="all, delete-orphan")

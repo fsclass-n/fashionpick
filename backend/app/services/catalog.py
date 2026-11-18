@@ -2,7 +2,7 @@
 import math
 import re
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import settings
@@ -47,7 +47,7 @@ def get_or_create_supplier(db: Session, name: str, **fields) -> Supplier:
     return supplier
 
 
-def save_sourced(db: Session, items: list[dict]) -> int:
+def save_sourced(db: Session, items: list[dict], markup: float | None = None) -> int:
     """source_url 기준 중복은 가격·재고·이미지만 갱신하고 신규만 추가. 신규 건수 반환."""
     created = 0
     for item in items:
@@ -56,17 +56,29 @@ def save_sourced(db: Session, items: list[dict]) -> int:
         if product:
             product.wholesale_price, product.stock, product.image_url = item["wholesale_price"], item["stock"], item["image_url"]
             if product.status == "sourced":
-                product.sale_price = suggest_sale_price(item["wholesale_price"])
+                product.sale_price = suggest_sale_price(item["wholesale_price"], markup)
             continue
         db.add(Product(
             supplier_id=supplier.id, name=item["name"], category=item["category"], keyword=item["keyword"],
-            wholesale_price=item["wholesale_price"], sale_price=suggest_sale_price(item["wholesale_price"]),
+            wholesale_price=item["wholesale_price"], sale_price=suggest_sale_price(item["wholesale_price"], markup),
             image_url=item["image_url"], image_ratio=item.get("image_ratio", 1.25), source_url=item["source_url"],
             options=item.get("options") or {}, stock=item.get("stock", 0),
         ))
         created += 1
     db.commit()
     return created
+
+
+def auto_register_crawled(db: Session, limit: int) -> int:
+    """크롤링 상품을 최신순으로 판매 등록해 쇼핑몰에 실제 상품이 보이게 한다 (원래 상품명 유지)."""
+    have = db.scalar(select(func.count(Product.id)).where(Product.status == "registered", ~Product.source_url.like("demo://%")))
+    need = max(0, limit - (have or 0))
+    rows = db.scalars(select(Product).where(Product.status == "sourced", ~Product.source_url.like("demo://%"))
+                      .order_by(Product.sourced_at.desc()).limit(need)).all()
+    for p in rows:
+        p.status, p.registered_at, p.registered_name = "registered", utcnow(), p.name
+    db.commit()
+    return len(rows)
 
 
 def product_out(p: Product) -> dict:

@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext'
 import { useRealtimeEvent } from '../context/RealtimeContext'
 import { Badge, Empty, ErrorBox, Spinner, useAsync } from '../components/ui'
 import NotificationSettings from '../components/NotificationSettings'
+import { PAY_LABEL, PAY_STATUS } from '../lib/payments'
 
 const STEPS = ['received', 'ordering', 'ordered', 'stocked']
 const STEP_LABEL = { received: '주문 접수', ordering: '발주 진행', ordered: '발주 완료', stocked: '입고·출고 준비' }
@@ -40,8 +41,14 @@ function MyOrders() {
             <div>
               <p className="text-[13px] font-semibold">{dateTime(o.created_at)} <span className="ml-2 font-normal text-muted">{o.order_no}</span></p>
             </div>
-            <Badge tone={ORDER_STATUS[o.status]?.tone}>{ORDER_STATUS[o.status]?.label}</Badge>
+            <span className="flex gap-1.5">
+              <Badge tone={(PAY_STATUS[o.payment_status] || [])[0]}>{PAY_LABEL[o.payment_method] || '결제'} · {(PAY_STATUS[o.payment_status] || [])[1]}</Badge>
+              <Badge tone={ORDER_STATUS[o.status]?.tone}>{ORDER_STATUS[o.status]?.label}</Badge>
+            </span>
           </div>
+          {o.payment_method === 'bank' && o.payment_status === 'pending' && (
+            <p className="mt-3 rounded-xl bg-warn/10 px-4 py-3 text-[12px] text-warn">입금 대기 중입니다 · 입금자명 {o.depositor_name} · {dateTime(o.deposit_due_at)}까지 입금 (모의)</p>
+          )}
           <ul className="divide-y divide-line">
             {o.items.map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-4 py-3 text-[13px]">

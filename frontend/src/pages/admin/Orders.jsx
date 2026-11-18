@@ -7,6 +7,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { api, download } from '../../lib/api'
 import { ORDER_STATUS, PO_STATUS, dateTime, won } from '../../lib/format'
+import { PAY_LABEL, PAY_STATUS } from '../../lib/payments'
 import { useRealtime, useRealtimeEvent } from '../../context/RealtimeContext'
 import { Badge, Empty, ErrorBox, Modal, PageHeader, Spinner, Tabs, WriteButton, useAsync } from '../../components/ui'
 
@@ -154,7 +155,17 @@ function OrderList() {
   const [status, setStatus] = useState('')
   const [open, setOpen] = useState(null)
   const { data, loading, error, reload } = useAsync(() => api(`/api/orders${status ? `?status=${status}` : ''}`), [status])
-  useRealtimeEvent(['order.created', 'po.updated', 'po.created'], reload)
+  useRealtimeEvent(['order.created', 'order.paid', 'po.updated', 'po.created'], reload)
+  const { toast } = useRealtime()
+  const confirmDeposit = async (o) => {
+    try {
+      await api(`/api/orders/${o.id}/confirm-deposit`, { method: 'POST' })
+      toast({ tone: 'success', icon: 'bag', title: '입금 확인 완료', body: `${o.order_no} · 발주서가 자동 생성됩니다` })
+      reload()
+    } catch (e) {
+      toast({ tone: 'danger', icon: 'warn', title: '입금 확인 실패', body: e.message })
+    }
+  }
 
   return (
     <>
@@ -163,7 +174,7 @@ function OrderList() {
       {loading && !data ? <Spinner /> : !data?.length ? <Empty title="주문이 없습니다" desc="'테스트 주문 발생'으로 주문 → 발주 자동화 흐름을 확인해 보세요." /> : (
         <div className="table-wrap">
           <table>
-            <thead><tr><th>주문번호</th><th>고객</th><th>채널</th><th className="text-right">금액</th><th>상태</th><th>주문일시</th><th></th></tr></thead>
+            <thead><tr><th>주문번호</th><th>고객</th><th>채널</th><th className="text-right">금액</th><th>결제</th><th>상태</th><th>주문일시</th><th></th></tr></thead>
             <tbody>
               {data.map((o) => (
                 <Fragment key={o.id}>
@@ -172,13 +183,19 @@ function OrderList() {
                     <td>{o.customer_name}</td>
                     <td className="text-muted">{o.channel}</td>
                     <td className="text-right">{won(o.total_amount)}</td>
+                    <td>
+                      <Badge tone={(PAY_STATUS[o.payment_status] || [])[0]}>{PAY_LABEL[o.payment_method] || '-'} · {(PAY_STATUS[o.payment_status] || [])[1]}</Badge>
+                      {o.payment_method === 'bank' && o.payment_status === 'pending' && (
+                        <WriteButton className="btn-primary ml-2 px-2.5 py-1 text-[11px]" onClick={(e) => { e.stopPropagation(); confirmDeposit(o) }}>입금 확인</WriteButton>
+                      )}
+                    </td>
                     <td><Badge tone={ORDER_STATUS[o.status]?.tone}>{ORDER_STATUS[o.status]?.label}</Badge></td>
                     <td className="text-muted">{dateTime(o.created_at)}</td>
                     <td><FontAwesomeIcon icon={faChevronDown} className={`text-muted transition ${open === o.id ? 'rotate-180' : ''}`} /></td>
                   </tr>
                   {open === o.id && (
                     <tr className="bg-surface-2/60">
-                      <td colSpan={7} className="whitespace-normal">
+                      <td colSpan={8} className="whitespace-normal">
                         <ul className="space-y-1.5 py-1 text-sm">
                           {o.items.map((i) => (
                             <li key={i.id} className="flex flex-wrap items-center justify-between gap-2">

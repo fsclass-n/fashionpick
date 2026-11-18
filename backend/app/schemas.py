@@ -124,6 +124,8 @@ class OrderIn(BaseModel):
 
 
 class ShopOrderIn(BaseModel):
+    payment_method: Literal["card", "easypay", "bank"] = "card"
+    depositor_name: str | None = Field(default=None, max_length=100)
     customer_name: str | None = Field(default=None, max_length=100)
     customer_phone: str = Field(min_length=9, max_length=20)
     address: str = Field(min_length=5, max_length=255)
@@ -151,6 +153,11 @@ class OrderOut(ORM):
     channel: str
     status: str
     total_amount: int
+    payment_method: str = ""
+    payment_status: str = "paid"
+    depositor_name: str = ""
+    deposit_due_at: UTCDateTime | None = None
+    paid_at: UTCDateTime | None = None
     created_at: UTCDateTime
     items: list[OrderItemOut]
 
@@ -169,6 +176,12 @@ class PurchaseOrderOut(ORM):
     sent_at: UTCDateTime | None = None
     received_at: UTCDateTime | None = None
     items: list[OrderItemOut] = []
+
+
+class TossConfirmIn(BaseModel):
+    paymentKey: str = Field(min_length=1, max_length=200)
+    orderId: str = Field(min_length=6, max_length=64)
+    amount: int = Field(gt=0)
 
 
 class PurchaseOrderStatusIn(BaseModel):
