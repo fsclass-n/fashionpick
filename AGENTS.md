@@ -20,6 +20,11 @@
 - `admin` (real admin): only via `POST /api/auth/admin-login` with `.env` `ADMIN_TOKEN`; full CRUD. Write endpoints use `require_admin`.
 - `test_admin`: from "테스트 관리자 로그인"; sees every admin view (`require_admin_read`) but all non-GET `/api/*` (except `/api/auth/*`) are blocked by the `read_only_guard` middleware in `main.py`. Frontend uses `WriteButton` / `useAuth().readOnly` to disable write actions.
 
+## Workflow preferences
+- After finishing each task, commit and push to `origin main` (user preference). Never commit `.env` or local DB files.
+- Report results to the user in Korean.
+- Presentation: edit `docs/presentation.md`, then regenerate `docs/fashionpick_발표자료.pptx` with `.venv/Scripts/python tools/build_presentation.py` (deps: `tools/requirements.txt`).
+
 ## Local notes
 - The local `.env` may contain the real TiDB `DATABASE_URL`. For local experiments/tests run with `DATABASE_URL=` (empty) so SQLite is used; pytest's conftest already overrides it.
 - Ports 8000 / 5173 may be used by other local projects; use `--port 8001` / `--port 5174` and set `CORS_ORIGINS` / `VITE_API_BASE_URL` env accordingly.
